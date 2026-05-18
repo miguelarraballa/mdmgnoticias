@@ -1,5 +1,6 @@
 import json
 import time
+from urllib.parse import urlparse
 
 from django.conf import settings
 from django.http import HttpResponse, JsonResponse
@@ -300,7 +301,12 @@ class FeedTestView(View):
                 ).values_list('url', flat=True)
             )
             feeds_data = [
-                {'name': o['name'], 'url': o['url'], 'existing': o['url'] in existing_urls}
+                {
+                    'name': o['name'],
+                    'url': o['url'],
+                    'html_url': o.get('html_url', ''),
+                    'existing': o['url'] in existing_urls,
+                }
                 for o in outlines
             ]
             new_count = sum(1 for f in feeds_data if not f['existing'])
@@ -343,6 +349,40 @@ class FeedTestView(View):
         })
 
 
+def _find_or_create_medio(html_url, xml_url):
+    """Find an existing Medio by domain match, or create one with favicon.ico from the domain."""
+    source_url = html_url or xml_url
+    if not source_url:
+        return None
+    try:
+        parsed = urlparse(source_url)
+        netloc = parsed.netloc
+        if not netloc:
+            return None
+        base = f"{parsed.scheme}://{netloc}"
+        favicon = f"{base}/favicon.ico"
+        # Derive a short name by stripping common subdomains
+        name = netloc
+        for prefix in ('www.', 'feeds.', 'rss.', 'm.', 'news.'):
+            if name.startswith(prefix):
+                name = name[len(prefix):]
+    except Exception:
+        return None
+
+    # 1. Match by base domain already present in an existing favicon_url
+    medio = Medio.objects.filter(favicon_url__startswith=base).first()
+    if medio:
+        return medio
+
+    # 2. Match by cleaned domain name (case-insensitive)
+    medio = Medio.objects.filter(name__iexact=name).first()
+    if medio:
+        return medio
+
+    # 3. Create a new Medio
+    return Medio.objects.create(name=name, favicon_url=favicon)
+
+
 @method_decorator(admin_required, name='dispatch')
 class OPMLImportView(View):
     def post(self, request, pk):
@@ -357,13 +397,18 @@ class OPMLImportView(View):
         for item in selected:
             url = item.get('url', '').strip()
             name = item.get('name', '').strip() or url
+            html_url = item.get('html_url', '').strip()
             if not url:
                 continue
+
+            # Use the parent feed's Medio if set; otherwise auto-detect from domain
+            medio = feed.medio or _find_or_create_medio(html_url, url)
+
             _, new = Feed.objects.get_or_create(
                 url=url,
                 defaults={
                     'name': name,
-                    'medio': feed.medio,
+                    'medio': medio,
                     'category': feed.category,
                     'is_active': True,
                 },

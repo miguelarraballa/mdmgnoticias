@@ -89,7 +89,10 @@ def parse_opml(content_bytes):
                     or outline.get('text')
                     or url
                 )
-                feeds.append({'name': name.strip(), 'url': url.strip()})
+                html_url = (
+                    outline.get('htmlUrl') or outline.get('htmlurl') or outline.get('htmlURL') or ''
+                )
+                feeds.append({'name': name.strip(), 'url': url.strip(), 'html_url': html_url.strip()})
     except Exception:
         pass
     return feeds
