@@ -1,6 +1,7 @@
+from . import __version__
 from .models import SiteConfig
 
 
 def site_config(request):
-    """Inject the singleton SiteConfig into every template context."""
-    return {'site_config': SiteConfig.get()}
+    """Inject SiteConfig and app version into every template context."""
+    return {'site_config': SiteConfig.get(), 'app_version': __version__}
