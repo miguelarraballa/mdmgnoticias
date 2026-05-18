@@ -1,11 +1,12 @@
 {% extends "admin_panel/base.html" %}
-{% block title %}{{ action }} categoría — News Admin{% endblock %}
+{% load i18n %}
+{% block title %}{{ action }} {% trans "categoría" %} — News Admin{% endblock %}
 {% block nav_categories %}active{% endblock %}
 
 {% block content %}
 <div class="d-flex align-items-center mb-4 gap-3">
-  <a href="{% url 'admin_category_list' %}" class="text-muted">← Categorías</a>
-  <h1 class="h4 mb-0">{{ action }} categoría</h1>
+  <a href="{% url 'admin_category_list' %}" class="text-muted">← {% trans "Categorías" %}</a>
+  <h1 class="h4 mb-0">{{ action }} {% trans "categoría" %}</h1>
 </div>
 
 <div class="card" style="max-width: 500px;">
@@ -21,8 +22,8 @@
       </div>
       {% endfor %}
       <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-primary">Guardar</button>
-        <a href="{% url 'admin_category_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary">{% trans "Guardar" %}</button>
+        <a href="{% url 'admin_category_list' %}" class="btn btn-outline-secondary">{% trans "Cancelar" %}</a>
       </div>
     </form>
   </div>

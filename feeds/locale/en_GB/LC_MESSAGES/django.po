@@ -1,0 +1,481 @@
+# English (UK) translations for MDMG Noticias
+# Copyright (C) 2026
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en_GB\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+# ── settings.py ────────────────────────────────────────────────────────────
+msgid "Español"
+msgstr "Spanish"
+
+msgid "English (UK)"
+msgstr "English (UK)"
+
+# ── models.py ──────────────────────────────────────────────────────────────
+msgid "Palabras separadas por comas. Se excluirán artículos que las contengan en etiquetas, título o resumen."
+msgstr "Comma-separated words. Articles containing them in tags, title or summary will be excluded."
+
+msgid "Claro"
+msgstr "Light"
+
+msgid "Oscuro"
+msgstr "Dark"
+
+msgid "Sistema (según dispositivo)"
+msgstr "System (device preference)"
+
+msgid "Configuración del sitio"
+msgstr "Site configuration"
+
+# ── forms.py ───────────────────────────────────────────────────────────────
+msgid "Nombre del feed"
+msgstr "Feed name"
+
+msgid "ej: patrocinado, publicidad, sorteo"
+msgstr "e.g. sponsored, advertisement, giveaway"
+
+msgid "Nombre de la categoría"
+msgstr "Category name"
+
+msgid "slug-url (dejar vacío para autogenerar)"
+msgstr "url-slug (leave empty to auto-generate)"
+
+msgid "Nombre del medio"
+msgstr "Source name"
+
+msgid "https://ejemplo.com/favicon.ico (opcional, se detecta automáticamente)"
+msgstr "https://example.com/favicon.ico (optional, auto-detected)"
+
+msgid "Modo de color"
+msgstr "Colour mode"
+
+msgid "Días de retención de noticias"
+msgstr "News retention days"
+
+msgid "Las noticias con más de este número de días se eliminarán automáticamente."
+msgstr "Articles older than this number of days will be automatically deleted."
+
+# ── views.py messages ──────────────────────────────────────────────────────
+msgid "Añadir"
+msgstr "Add"
+
+msgid "Editar"
+msgstr "Edit"
+
+msgid "Feed añadido correctamente."
+msgstr "Feed added successfully."
+
+msgid "Feed actualizado."
+msgstr "Feed updated."
+
+msgid "Feed eliminado."
+msgstr "Feed deleted."
+
+msgid "Feeds actualizados correctamente."
+msgstr "Feeds updated successfully."
+
+msgid "Error al actualizar feeds: %s"
+msgstr "Error updating feeds: %s"
+
+msgid "Parámetros inválidos"
+msgstr "Invalid parameters"
+
+msgid "Categoría añadida."
+msgstr "Category added."
+
+msgid "Categoría actualizada."
+msgstr "Category updated."
+
+msgid "Categoría eliminada."
+msgstr "Category deleted."
+
+msgid "Medio añadido."
+msgstr "Source added."
+
+msgid "Medio actualizado."
+msgstr "Source updated."
+
+msgid "Medio eliminado."
+msgstr "Source deleted."
+
+msgid "Configuración guardada."
+msgstr "Settings saved."
+
+msgid "Noticias actualizadas."
+msgstr "News updated."
+
+msgid "Error al actualizar: %s"
+msgstr "Error updating: %s"
+
+msgid "Espera %ds"
+msgstr "Wait %ds"
+
+msgid "Espera %ds antes de volver a refrescar."
+msgstr "Wait %ds before refreshing again."
+
+msgid "Datos inválidos"
+msgstr "Invalid data"
+
+msgid "No se ha seleccionado archivo"
+msgstr "No file selected"
+
+msgid "El archivo no parece ser un OPML válido"
+msgstr "The file does not appear to be a valid OPML"
+
+msgid "OPML sin feeds encontrados"
+msgstr "OPML with no feeds found"
+
+msgid "OPML · %(total)d feeds encontrados · %(new)d nuevos"
+msgstr "OPML · %(total)d feeds found · %(new)d new"
+
+msgid "formato inválido"
+msgstr "invalid format"
+
+msgid "Feed inválido: %s"
+msgstr "Invalid feed: %s"
+
+# ── base.html (public) ─────────────────────────────────────────────────────
+msgid "Todos los medios"
+msgstr "All sources"
+
+msgid "Todo"
+msgstr "All"
+
+msgid "Actualizar noticias"
+msgstr "Refresh news"
+
+msgid "Actualizando…"
+msgstr "Updating…"
+
+msgid "Espera %ds"
+msgstr "Wait %ds"
+
+msgid "+%d nuevas"
+msgstr "+%d new"
+
+msgid "Al día"
+msgstr "Up to date"
+
+msgid "Error de red"
+msgstr "Network error"
+
+msgid "Error"
+msgstr "Error"
+
+# ── article_list.html ──────────────────────────────────────────────────────
+msgid "Nuevos artículos"
+msgstr "New articles"
+
+msgid "Pulsa para actualizar"
+msgstr "Click to refresh"
+
+msgid "Últimas recibidas"
+msgstr "Latest received"
+
+msgid "Por fecha de publicación"
+msgstr "By publication date"
+
+msgid "No hay artículos todavía."
+msgstr "No articles yet."
+
+msgid "Añade feeds desde el <a href=\"/panel/\">panel de administración</a>."
+msgstr "Add feeds from the <a href=\"/panel/\">admin panel</a>."
+
+msgid "Cargando…"
+msgstr "Loading…"
+
+msgid "— Has llegado al final —"
+msgstr "— End of feed —"
+
+msgid "1 artículo nuevo"
+msgstr "1 new article"
+
+msgid "%d artículos nuevos"
+msgstr "%d new articles"
+
+msgid "Error cargando más artículos:"
+msgstr "Error loading more articles:"
+
+# ── article_cards.html ─────────────────────────────────────────────────────
+msgid "atrás"
+msgstr "ago"
+
+msgid "Reproducir audio"
+msgstr "Play audio"
+
+msgid "Reproducir vídeo"
+msgstr "Play video"
+
+msgid "Leer artículo original →"
+msgstr "Read original article →"
+
+# ── article_detail.html ────────────────────────────────────────────────────
+msgid "Compartir en WhatsApp"
+msgstr "Share on WhatsApp"
+
+msgid "Compartir"
+msgstr "Share"
+
+msgid "← Volver al muro"
+msgstr "← Back to feed"
+
+# ── admin_panel/base.html ──────────────────────────────────────────────────
+msgid "Panel"
+msgstr "Panel"
+
+msgid "Ver sitio"
+msgstr "View site"
+
+msgid "Salir"
+msgstr "Log out"
+
+msgid "Gestión"
+msgstr "Management"
+
+msgid "OPML subidos"
+msgstr "Uploaded OPML"
+
+msgid "Medios"
+msgstr "Sources"
+
+msgid "Categorías"
+msgstr "Categories"
+
+msgid "Configuración"
+msgstr "Settings"
+
+# ── admin_panel/login.html ─────────────────────────────────────────────────
+msgid "Acceso"
+msgstr "Login"
+
+msgid "Usuario o contraseña incorrectos."
+msgstr "Incorrect username or password."
+
+msgid "Usuario"
+msgstr "Username"
+
+msgid "Contraseña"
+msgstr "Password"
+
+msgid "Entrar"
+msgstr "Log in"
+
+# ── admin_panel/dashboard.html ─────────────────────────────────────────────
+msgid "Actualizar feeds"
+msgstr "Update feeds"
+
+msgid "Artículos"
+msgstr "Articles"
+
+msgid "Feeds activos"
+msgstr "Active feeds"
+
+msgid "Añadir feed"
+msgstr "Add feed"
+
+msgid "Nombre"
+msgstr "Name"
+
+msgid "Última actualización"
+msgstr "Last updated"
+
+msgid "Estado"
+msgstr "Status"
+
+msgid "Activo"
+msgstr "Active"
+
+msgid "Inactivo"
+msgstr "Inactive"
+
+msgid "Editar"
+msgstr "Edit"
+
+msgid "Nunca"
+msgstr "Never"
+
+msgid "No hay feeds. <a href=\"%(url)s\">Añade uno</a>."
+msgstr "No feeds. <a href=\"%(url)s\">Add one</a>."
+
+msgid "artículos"
+msgstr "articles"
+
+# ── admin_panel/feed_list.html ─────────────────────────────────────────────
+msgid "Categoría"
+msgstr "Category"
+
+msgid "Acciones"
+msgstr "Actions"
+
+msgid "Probar"
+msgstr "Test"
+
+msgid "Eliminar"
+msgstr "Delete"
+
+msgid "No hay feeds todavía."
+msgstr "No feeds yet."
+
+msgid "Importar feeds desde OPML"
+msgstr "Import feeds from OPML"
+
+msgid "Seleccionar nuevos"
+msgstr "Select new"
+
+msgid "Deseleccionar todos"
+msgstr "Deselect all"
+
+msgid "Cancelar"
+msgstr "Cancel"
+
+msgid "Importar seleccionados"
+msgstr "Import selected"
+
+msgid "ya existe"
+msgstr "already exists"
+
+msgid "Importando…"
+msgstr "Importing…"
+
+msgid "Importar %d feed"
+msgstr "Import %d feed"
+
+msgid "Importar %d feeds"
+msgstr "Import %d feeds"
+
+msgid "importado correctamente"
+msgstr "imported successfully"
+
+msgid "importados correctamente"
+msgstr "imported successfully"
+
+msgid "Error al importar"
+msgstr "Error importing"
+
+msgid "Probando…"
+msgstr "Testing…"
+
+msgid "selecciona qué importar →"
+msgstr "select feeds to import →"
+
+msgid "Elegir feeds…"
+msgstr "Choose feeds…"
+
+msgid "Logo detectado y guardado"
+msgstr "Logo detected and saved"
+
+# ── admin_panel/feed_form.html ─────────────────────────────────────────────
+msgid "Guardar"
+msgstr "Save"
+
+# ── admin_panel/feed_delete.html ───────────────────────────────────────────
+msgid "Eliminar feed"
+msgstr "Delete feed"
+
+msgid "¿Seguro que quieres eliminar el feed <strong>%(name)s</strong>?"
+msgstr "Are you sure you want to delete the feed <strong>%(name)s</strong>?"
+
+msgid "Se eliminarán también todos los artículos asociados a este feed."
+msgstr "All articles associated with this feed will also be deleted."
+
+msgid "Sí, eliminar"
+msgstr "Yes, delete"
+
+# ── admin_panel/category_list.html ─────────────────────────────────────────
+msgid "Añadir categoría"
+msgstr "Add category"
+
+msgid "No hay categorías todavía."
+msgstr "No categories yet."
+
+# ── admin_panel/category_form.html ─────────────────────────────────────────
+msgid "categoría"
+msgstr "category"
+
+msgid "Eliminar categoría"
+msgstr "Delete category"
+
+msgid "¿Seguro que quieres eliminar la categoría <strong>%(name)s</strong>?"
+msgstr "Are you sure you want to delete the category <strong>%(name)s</strong>?"
+
+msgid "Los feeds de esta categoría quedarán sin categoría asignada."
+msgstr "Feeds in this category will be left without an assigned category."
+
+# ── admin_panel/medio_list.html ────────────────────────────────────────────
+msgid "Añadir medio"
+msgstr "Add source"
+
+msgid "No hay medios todavía."
+msgstr "No sources yet."
+
+# ── admin_panel/medio_form.html ────────────────────────────────────────────
+msgid "medio"
+msgstr "source"
+
+msgid "Eliminar medio"
+msgstr "Delete source"
+
+msgid "¿Seguro que quieres eliminar el medio <strong>%(name)s</strong>?"
+msgstr "Are you sure you want to delete the source <strong>%(name)s</strong>?"
+
+msgid "Los feeds de este medio quedarán sin medio asignado."
+msgstr "Feeds from this source will be left without an assigned source."
+
+# ── admin_panel/settings.html ──────────────────────────────────────────────
+msgid "Apariencia"
+msgstr "Appearance"
+
+msgid "Afecta al frontend público. El panel de administración siempre usa el modo claro."
+msgstr "Affects the public frontend. The admin panel always uses light mode."
+
+msgid "Retención de noticias"
+msgstr "News retention"
+
+msgid "días"
+msgstr "days"
+
+msgid "Guardar cambios"
+msgstr "Save changes"
+
+# ── admin_panel/opml_upload.html ───────────────────────────────────────────
+msgid "Subir archivo OPML"
+msgstr "Upload OPML file"
+
+msgid "Sube un archivo <code>.opml</code> desde tu ordenador. Se generará una URL que puedes añadir como feed en el listado de Feeds."
+msgstr "Upload an <code>.opml</code> file from your computer. A URL will be generated that you can add as a feed in the Feeds list."
+
+msgid "Arrastra aquí tu archivo OPML"
+msgstr "Drag your OPML file here"
+
+msgid "o"
+msgstr "or"
+
+msgid "Seleccionar archivo"
+msgstr "Select file"
+
+msgid "Archivos subidos"
+msgstr "Uploaded files"
+
+msgid "Copiar URL"
+msgstr "Copy URL"
+
+msgid "No hay archivos subidos todavía."
+msgstr "No files uploaded yet."
+
+msgid "Subiendo"
+msgstr "Uploading"
+
+msgid "subido correctamente"
+msgstr "uploaded successfully"
+
+msgid "¿Eliminar este archivo OPML?"
+msgstr "Delete this OPML file?"
+
+msgid "ahora mismo"
+msgstr "just now"
+
+msgid "Error al eliminar"
+msgstr "Error deleting"
