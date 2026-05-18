@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 from django.conf import settings
 from django.http import HttpResponse, JsonResponse
 from django.urls import reverse
+from django.utils.translation import gettext as _
 from .utils import fetch_raw, find_favicon, is_opml, parse_feed, parse_opml
 from feeds.management.commands.fetch_feeds import fetch_feed_batch
 from django.contrib import messages
@@ -92,8 +93,8 @@ class PublicFetchView(View):
                 remaining = int(REFRESH_COOLDOWN - (now - last))
                 if is_ajax:
                     return JsonResponse({'ok': False, 'cooldown': remaining,
-                                         'message': f'Espera {remaining}s'})
-                messages.warning(request, f'Espera {remaining}s antes de volver a refrescar.')
+                                         'message': _('Espera %ds') % remaining})
+                messages.warning(request, _('Espera %ds antes de volver a refrescar.') % remaining)
                 return redirect(request.META.get('HTTP_REFERER', '/'))
             request.session['last_fetch'] = time.time()
 
@@ -101,11 +102,11 @@ class PublicFetchView(View):
             result = fetch_feed_batch(offset, batch_size)
             if is_ajax:
                 return JsonResponse({'ok': True, **result})
-            messages.success(request, 'Noticias actualizadas.')
+            messages.success(request, _('Noticias actualizadas.'))
         except Exception as e:
             if is_ajax:
                 return JsonResponse({'ok': False, 'message': str(e)}, status=500)
-            messages.error(request, f'Error al actualizar: {e}')
+            messages.error(request, _('Error al actualizar: %s') % str(e))
 
         return redirect(request.META.get('HTTP_REFERER', '/'))
 
@@ -162,31 +163,31 @@ class FeedListView(View):
 @method_decorator(admin_required, name='dispatch')
 class FeedCreateView(View):
     def get(self, request):
-        return render(request, 'admin_panel/feed_form.html', {'form': FeedForm(), 'action': 'Añadir'})
+        return render(request, 'admin_panel/feed_form.html', {'form': FeedForm(), 'action': _('Añadir')})
 
     def post(self, request):
         form = FeedForm(request.POST)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Feed añadido correctamente.')
+            messages.success(request, _('Feed añadido correctamente.'))
             return redirect('admin_feed_list')
-        return render(request, 'admin_panel/feed_form.html', {'form': form, 'action': 'Añadir'})
+        return render(request, 'admin_panel/feed_form.html', {'form': form, 'action': _('Añadir')})
 
 
 @method_decorator(admin_required, name='dispatch')
 class FeedUpdateView(View):
     def get(self, request, pk):
         feed = get_object_or_404(Feed, pk=pk)
-        return render(request, 'admin_panel/feed_form.html', {'form': FeedForm(instance=feed), 'action': 'Editar', 'feed': feed})
+        return render(request, 'admin_panel/feed_form.html', {'form': FeedForm(instance=feed), 'action': _('Editar'), 'feed': feed})
 
     def post(self, request, pk):
         feed = get_object_or_404(Feed, pk=pk)
         form = FeedForm(request.POST, instance=feed)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Feed actualizado.')
+            messages.success(request, _('Feed actualizado.'))
             return redirect('admin_feed_list')
-        return render(request, 'admin_panel/feed_form.html', {'form': form, 'action': 'Editar', 'feed': feed})
+        return render(request, 'admin_panel/feed_form.html', {'form': form, 'action': _('Editar'), 'feed': feed})
 
 
 @method_decorator(admin_required, name='dispatch')
@@ -198,7 +199,7 @@ class FeedDeleteView(View):
     def post(self, request, pk):
         feed = get_object_or_404(Feed, pk=pk)
         feed.delete()
-        messages.success(request, 'Feed eliminado.')
+        messages.success(request, _('Feed eliminado.'))
         return redirect('admin_feed_list')
 
 
@@ -212,31 +213,31 @@ class CategoryListView(View):
 @method_decorator(admin_required, name='dispatch')
 class CategoryCreateView(View):
     def get(self, request):
-        return render(request, 'admin_panel/category_form.html', {'form': CategoryForm(), 'action': 'Añadir'})
+        return render(request, 'admin_panel/category_form.html', {'form': CategoryForm(), 'action': _('Añadir')})
 
     def post(self, request):
         form = CategoryForm(request.POST)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Categoría añadida.')
+            messages.success(request, _('Categoría añadida.'))
             return redirect('admin_category_list')
-        return render(request, 'admin_panel/category_form.html', {'form': form, 'action': 'Añadir'})
+        return render(request, 'admin_panel/category_form.html', {'form': form, 'action': _('Añadir')})
 
 
 @method_decorator(admin_required, name='dispatch')
 class CategoryUpdateView(View):
     def get(self, request, pk):
         cat = get_object_or_404(Category, pk=pk)
-        return render(request, 'admin_panel/category_form.html', {'form': CategoryForm(instance=cat), 'action': 'Editar', 'category': cat})
+        return render(request, 'admin_panel/category_form.html', {'form': CategoryForm(instance=cat), 'action': _('Editar'), 'category': cat})
 
     def post(self, request, pk):
         cat = get_object_or_404(Category, pk=pk)
         form = CategoryForm(request.POST, instance=cat)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Categoría actualizada.')
+            messages.success(request, _('Categoría actualizada.'))
             return redirect('admin_category_list')
-        return render(request, 'admin_panel/category_form.html', {'form': form, 'action': 'Editar', 'category': cat})
+        return render(request, 'admin_panel/category_form.html', {'form': form, 'action': _('Editar'), 'category': cat})
 
 
 @method_decorator(admin_required, name='dispatch')
@@ -248,19 +249,18 @@ class CategoryDeleteView(View):
     def post(self, request, pk):
         cat = get_object_or_404(Category, pk=pk)
         cat.delete()
-        messages.success(request, 'Categoría eliminada.')
+        messages.success(request, _('Categoría eliminada.'))
         return redirect('admin_category_list')
 
 
 @method_decorator(admin_required, name='dispatch')
 class FetchNowView(View):
     def post(self, request):
-        # Legacy redirect-based endpoint (kept for non-JS fallback)
         try:
             call_command('fetch_feeds')
-            messages.success(request, 'Feeds actualizados correctamente.')
+            messages.success(request, _('Feeds actualizados correctamente.'))
         except Exception as e:
-            messages.error(request, f'Error al actualizar feeds: {e}')
+            messages.error(request, _('Error al actualizar feeds: %s') % str(e))
         return redirect('admin_dashboard')
 
 
@@ -272,7 +272,7 @@ class FetchBatchAPIView(View):
             offset = int(body.get('offset', 0))
             batch_size = int(body.get('batch_size', FETCH_BATCH_SIZE))
         except (ValueError, TypeError, json.JSONDecodeError):
-            return JsonResponse({'ok': False, 'message': 'Parámetros inválidos'}, status=400)
+            return JsonResponse({'ok': False, 'message': _('Parámetros inválidos')}, status=400)
 
         try:
             result = fetch_feed_batch(offset, batch_size)
@@ -290,11 +290,10 @@ class FeedTestView(View):
         except Exception as e:
             return JsonResponse({'ok': False, 'message': str(e)})
 
-        # ── OPML: return feed list for manual selection, don't auto-import ──
         if is_opml(content, content_type, feed.url):
             outlines = parse_opml(content)
             if not outlines:
-                return JsonResponse({'ok': False, 'message': 'OPML sin feeds encontrados'})
+                return JsonResponse({'ok': False, 'message': _('OPML sin feeds encontrados')})
             existing_urls = set(
                 Feed.objects.filter(
                     url__in=[o['url'] for o in outlines]
@@ -313,11 +312,10 @@ class FeedTestView(View):
             return JsonResponse({
                 'ok': True,
                 'opml': True,
-                'message': f'OPML · {len(outlines)} feeds encontrados · {new_count} nuevos',
+                'message': _('OPML · %(total)d feeds encontrados · %(new)d nuevos') % {'total': len(outlines), 'new': new_count},
                 'feeds': feeds_data,
             })
 
-        # ── RSS / Atom ─────────────────────────────────────────────────────
         parsed = parse_feed(content, feed.url)
 
         status = parsed.get('status', 0)
@@ -328,10 +326,9 @@ class FeedTestView(View):
         if status and status >= 400:
             return JsonResponse({'ok': False, 'message': f'HTTP {status}'})
         if entries == 0 and bozo:
-            exc = str(parsed.get('bozo_exception', 'formato inválido'))
-            return JsonResponse({'ok': False, 'message': f'Feed inválido: {exc}'})
+            exc = str(parsed.get('bozo_exception', _('formato inválido')))
+            return JsonResponse({'ok': False, 'message': _('Feed inválido: %s') % exc})
 
-        # Auto-detect favicon on the medio if not set
         favicon_saved = ''
         if feed.medio and not feed.medio.favicon_url:
             favicon = find_favicon(parsed, feed.url)
@@ -350,7 +347,6 @@ class FeedTestView(View):
 
 
 def _find_or_create_medio(html_url, xml_url):
-    """Find an existing Medio by domain match, or create one with favicon.ico from the domain."""
     source_url = html_url or xml_url
     if not source_url:
         return None
@@ -361,7 +357,6 @@ def _find_or_create_medio(html_url, xml_url):
             return None
         base = f"{parsed.scheme}://{netloc}"
         favicon = f"{base}/favicon.ico"
-        # Derive a short name by stripping common subdomains
         name = netloc
         for prefix in ('www.', 'feeds.', 'rss.', 'm.', 'news.'):
             if name.startswith(prefix):
@@ -369,17 +364,14 @@ def _find_or_create_medio(html_url, xml_url):
     except Exception:
         return None
 
-    # 1. Match by base domain already present in an existing favicon_url
     medio = Medio.objects.filter(favicon_url__startswith=base).first()
     if medio:
         return medio
 
-    # 2. Match by cleaned domain name (case-insensitive)
     medio = Medio.objects.filter(name__iexact=name).first()
     if medio:
         return medio
 
-    # 3. Create a new Medio
     return Medio.objects.create(name=name, favicon_url=favicon)
 
 
@@ -391,7 +383,7 @@ class OPMLImportView(View):
             body = json.loads(request.body)
             selected = body.get('feeds', [])
         except (ValueError, KeyError):
-            return JsonResponse({'ok': False, 'message': 'Datos inválidos'}, status=400)
+            return JsonResponse({'ok': False, 'message': _('Datos inválidos')}, status=400)
 
         created = 0
         for item in selected:
@@ -401,7 +393,6 @@ class OPMLImportView(View):
             if not url:
                 continue
 
-            # Use the parent feed's Medio if set; otherwise auto-detect from domain
             medio = feed.medio or _find_or_create_medio(html_url, url)
 
             _, new = Feed.objects.get_or_create(
@@ -433,31 +424,31 @@ class MedioListView(View):
 @method_decorator(admin_required, name='dispatch')
 class MedioCreateView(View):
     def get(self, request):
-        return render(request, 'admin_panel/medio_form.html', {'form': MedioForm(), 'action': 'Añadir'})
+        return render(request, 'admin_panel/medio_form.html', {'form': MedioForm(), 'action': _('Añadir')})
 
     def post(self, request):
         form = MedioForm(request.POST)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Medio añadido.')
+            messages.success(request, _('Medio añadido.'))
             return redirect('admin_medio_list')
-        return render(request, 'admin_panel/medio_form.html', {'form': form, 'action': 'Añadir'})
+        return render(request, 'admin_panel/medio_form.html', {'form': form, 'action': _('Añadir')})
 
 
 @method_decorator(admin_required, name='dispatch')
 class MedioUpdateView(View):
     def get(self, request, pk):
         medio = get_object_or_404(Medio, pk=pk)
-        return render(request, 'admin_panel/medio_form.html', {'form': MedioForm(instance=medio), 'action': 'Editar', 'medio': medio})
+        return render(request, 'admin_panel/medio_form.html', {'form': MedioForm(instance=medio), 'action': _('Editar'), 'medio': medio})
 
     def post(self, request, pk):
         medio = get_object_or_404(Medio, pk=pk)
         form = MedioForm(request.POST, instance=medio)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Medio actualizado.')
+            messages.success(request, _('Medio actualizado.'))
             return redirect('admin_medio_list')
-        return render(request, 'admin_panel/medio_form.html', {'form': form, 'action': 'Editar', 'medio': medio})
+        return render(request, 'admin_panel/medio_form.html', {'form': form, 'action': _('Editar'), 'medio': medio})
 
 
 @method_decorator(admin_required, name='dispatch')
@@ -469,7 +460,7 @@ class MedioDeleteView(View):
     def post(self, request, pk):
         medio = get_object_or_404(Medio, pk=pk)
         medio.delete()
-        messages.success(request, 'Medio eliminado.')
+        messages.success(request, _('Medio eliminado.'))
         return redirect('admin_medio_list')
 
 
@@ -486,13 +477,13 @@ class OPMLUploadListView(View):
     def post(self, request):
         f = request.FILES.get('opml_file')
         if not f:
-            return JsonResponse({'ok': False, 'message': 'No se ha seleccionado archivo'})
+            return JsonResponse({'ok': False, 'message': _('No se ha seleccionado archivo')})
         try:
             raw = f.read()
             if not is_opml(raw, f.content_type or '', f.name):
-                return JsonResponse({'ok': False, 'message': 'El archivo no parece ser un OPML válido'})
+                return JsonResponse({'ok': False, 'message': _('El archivo no parece ser un OPML válido')})
             try:
-                text = raw.decode('utf-8-sig')  # strips BOM if present
+                text = raw.decode('utf-8-sig')
             except UnicodeDecodeError:
                 text = raw.decode('latin-1')
             obj = UploadedOPML.objects.create(filename=f.name, content=text)
@@ -548,6 +539,6 @@ class SettingsView(View):
         form = SiteConfigForm(request.POST, instance=SiteConfig.get())
         if form.is_valid():
             form.save()
-            messages.success(request, 'Configuración guardada.')
+            messages.success(request, _('Configuración guardada.'))
             return redirect('admin_settings')
         return render(request, 'admin_panel/settings.html', {'form': form})

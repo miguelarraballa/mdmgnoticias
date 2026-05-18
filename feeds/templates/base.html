@@ -1,5 +1,7 @@
+{% load i18n %}
+{% get_current_language as LANG_CODE %}
 <!DOCTYPE html>
-<html lang="es" data-bs-theme="light">
+<html lang="{{ LANG_CODE }}" data-bs-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -35,7 +37,7 @@
 
     {% if medios %}
     <select id="medio-select" class="cs cs--nav">
-      <option value="/">Todos los medios</option>
+      <option value="/">{% trans "Todos los medios" %}</option>
       {% for medio in medios %}
       <option value="/m/{{ medio.slug }}/" {% if active_medio.slug == medio.slug %}selected{% endif %}>{{ medio.name }}</option>
       {% endfor %}
@@ -44,13 +46,23 @@
 
     <div class="ms-auto d-flex align-items-center gap-2">
       <span id="refresh-status" class="text-white small" style="display:none!important"></span>
-      <button id="refresh-btn" class="refresh-btn" title="Actualizar noticias" data-url="{% url 'public_fetch' %}" data-csrf="{{ csrf_token }}">&#8635;</button>
+      <button id="refresh-btn" class="refresh-btn" title="{% trans 'Actualizar noticias' %}" data-url="{% url 'public_fetch' %}" data-csrf="{{ csrf_token }}">&#8635;</button>
+      <form method="post" action="{% url 'set_language' %}" class="d-inline">
+        {% csrf_token %}
+        <input name="next" type="hidden" value="{{ request.path }}">
+        {% get_current_language as current_lang %}
+        {% if current_lang == 'es' %}
+        <button name="language" value="en-gb" class="btn btn-sm btn-outline-light px-2 py-0" type="submit" title="Switch to English">EN</button>
+        {% else %}
+        <button name="language" value="es" class="btn btn-sm btn-outline-light px-2 py-0" type="submit" title="Cambiar a español">ES</button>
+        {% endif %}
+      </form>
     </div>
   </div>
   {% if categories %}
   <div class="container-fluid px-0 overflow-auto" id="cat-bar">
     <div class="d-flex gap-1 px-3 py-1 flex-nowrap">
-      <a href="/" class="cat-pill {% if not active_category %}active{% endif %}">Todo</a>
+      <a href="/" class="cat-pill {% if not active_category %}active{% endif %}">{% trans "Todo" %}</a>
       {% for cat in categories %}
       <a href="/c/{{ cat.slug }}/" class="cat-pill {% if active_category.slug == cat.slug %}active{% endif %}">{{ cat.name }}</a>
       {% endfor %}
@@ -100,6 +112,15 @@
     const status = document.getElementById('refresh-status');
     if (!btn) return;
 
+    const _t = {
+      updating: "{% trans 'Actualizando…' %}",
+      wait: "{% trans 'Espera %ds' %}",
+      newArticles: "{% trans '+%d nuevas' %}",
+      upToDate: "{% trans 'Al día' %}",
+      networkError: "{% trans 'Error de red' %}",
+      error: "{% trans 'Error' %}",
+    };
+
     async function runBatches(url, csrf, batchSize) {
       btn.disabled = true;
       btn.style.animation = 'spin 1s linear infinite';
@@ -108,7 +129,7 @@
 
       try {
         while (true) {
-          status.textContent = offset === 0 ? 'Actualizando…' : `${offset} feeds…`;
+          status.textContent = offset === 0 ? _t.updating : `${offset} feeds…`;
           const resp = await fetch(url, {
             method: 'POST',
             headers: {
@@ -121,14 +142,16 @@
           const data = await resp.json();
           if (!data.ok) {
             status.textContent = data.cooldown
-              ? `Espera ${data.cooldown}s`
-              : (data.message || 'Error');
+              ? _t.wait.replace('%d', data.cooldown)
+              : (data.message || _t.error);
             setTimeout(() => { status.style.setProperty('display', 'none', 'important'); }, 3000);
             return;
           }
           totalNew += data.new_articles || 0;
           if (data.done) {
-            status.textContent = totalNew > 0 ? `+${totalNew} nuevas` : 'Al día';
+            status.textContent = totalNew > 0
+              ? _t.newArticles.replace('%d', totalNew)
+              : _t.upToDate;
             setTimeout(() => {
               status.style.setProperty('display', 'none', 'important');
               location.reload();
@@ -138,7 +161,7 @@
           offset = data.next_offset;
         }
       } catch (e) {
-        status.textContent = 'Error de red';
+        status.textContent = _t.networkError;
         setTimeout(() => { status.style.setProperty('display', 'none', 'important'); }, 3000);
       } finally {
         btn.disabled = false;

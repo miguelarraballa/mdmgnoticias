@@ -1,27 +1,28 @@
 {% extends "admin_panel/base.html" %}
-{% block title %}Configuración — News Admin{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Configuración" %} — News Admin{% endblock %}
 {% block nav_settings %}active{% endblock %}
 
 {% block content %}
-<h1 class="h4 mb-4">Configuración</h1>
+<h1 class="h4 mb-4">{% trans "Configuración" %}</h1>
 
 <form method="post" style="max-width: 560px;">
   {% csrf_token %}
 
   <div class="card mb-4">
-    <div class="card-header fw-semibold">Apariencia</div>
+    <div class="card-header fw-semibold">{% trans "Apariencia" %}</div>
     <div class="card-body">
       <div class="mb-0">
         <label for="{{ form.theme.id_for_label }}" class="form-label">{{ form.theme.label }}</label>
         {{ form.theme }}
-        <div class="form-text">Afecta al frontend público. El panel de administración siempre usa el modo claro.</div>
+        <div class="form-text">{% trans "Afecta al frontend público. El panel de administración siempre usa el modo claro." %}</div>
         {% for error in form.theme.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
       </div>
     </div>
   </div>
 
   <div class="card mb-4">
-    <div class="card-header fw-semibold">Retención de noticias</div>
+    <div class="card-header fw-semibold">{% trans "Retención de noticias" %}</div>
     <div class="card-body">
       <div class="mb-0">
         <label for="{{ form.articles_retention_days.id_for_label }}" class="form-label">
@@ -29,7 +30,7 @@
         </label>
         <div class="input-group" style="max-width: 180px;">
           {{ form.articles_retention_days }}
-          <span class="input-group-text">días</span>
+          <span class="input-group-text">{% trans "días" %}</span>
         </div>
         <div class="form-text">{{ form.articles_retention_days.help_text }}</div>
         {% for error in form.articles_retention_days.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
@@ -37,6 +38,6 @@
     </div>
   </div>
 
-  <button type="submit" class="btn btn-primary">Guardar cambios</button>
+  <button type="submit" class="btn btn-primary">{% trans "Guardar cambios" %}</button>
 </form>
 {% endblock %}

@@ -1,29 +1,29 @@
 {% extends "admin_panel/base.html" %}
-{% block title %}OPML subidos — News Admin{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "OPML subidos" %} — News Admin{% endblock %}
 {% block nav_opml %}active{% endblock %}
 
 {% block content %}
-<h1 class="h4 mb-4">OPML subidos</h1>
+<h1 class="h4 mb-4">{% trans "OPML subidos" %}</h1>
 
 <div class="row g-4">
 
   <!-- Upload card -->
   <div class="col-12 col-lg-5">
     <div class="card">
-      <div class="card-header fw-semibold">Subir archivo OPML</div>
+      <div class="card-header fw-semibold">{% trans "Subir archivo OPML" %}</div>
       <div class="card-body">
         <p class="text-muted small mb-3">
-          Sube un archivo <code>.opml</code> desde tu ordenador. Se generará una URL que puedes
-          añadir como feed en el listado de Feeds.
+          {% blocktrans %}Sube un archivo <code>.opml</code> desde tu ordenador. Se generará una URL que puedes añadir como feed en el listado de Feeds.{% endblocktrans %}
         </p>
         <div id="drop-zone"
              class="border border-2 border-dashed rounded-3 text-center p-4 mb-3"
              style="cursor:pointer; border-color:#dee2e6 !important; transition: border-color .2s, background .2s">
           <div class="mb-2" style="font-size:2rem">📂</div>
-          <p class="mb-1 fw-medium">Arrastra aquí tu archivo OPML</p>
-          <p class="text-muted small mb-2">o</p>
+          <p class="mb-1 fw-medium">{% trans "Arrastra aquí tu archivo OPML" %}</p>
+          <p class="text-muted small mb-2">{% trans "o" %}</p>
           <label class="btn btn-outline-primary btn-sm" for="opml-file-input">
-            Seleccionar archivo
+            {% trans "Seleccionar archivo" %}
           </label>
           <input type="file" id="opml-file-input" accept=".opml,.xml" class="d-none">
         </div>
@@ -41,7 +41,7 @@
   <div class="col-12 col-lg-7">
     <div class="card">
       <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
-        <span>Archivos subidos</span>
+        <span>{% trans "Archivos subidos" %}</span>
         <span class="badge bg-secondary" id="upload-count">{{ uploads|length }}</span>
       </div>
       <div id="uploads-list">
@@ -60,23 +60,23 @@
                          id="url-{{ u.id }}">
                   <button class="btn btn-outline-secondary btn-copy"
                           data-target="url-{{ u.id }}"
-                          title="Copiar URL">
+                          title="{% trans 'Copiar URL' %}">
                     📋
                   </button>
                 </div>
-                <p class="text-muted small mt-1 mb-0">{{ u.uploaded_at|timesince }} atrás</p>
+                <p class="text-muted small mt-1 mb-0">{{ u.uploaded_at|timesince }} {% trans "atrás" %}</p>
               </div>
               <button class="btn btn-sm btn-outline-danger btn-delete flex-shrink-0"
                       data-id="{{ u.id }}"
                       data-url="{% url 'admin_opml_delete' u.pk %}"
-                      title="Eliminar">✕</button>
+                      title="{% trans 'Eliminar' %}">✕</button>
             </div>
           </li>
           {% endfor %}
         </ul>
         {% else %}
         <div class="text-center text-muted py-4" id="empty-msg">
-          <p class="mb-0">No hay archivos subidos todavía.</p>
+          <p class="mb-0">{% trans "No hay archivos subidos todavía." %}</p>
         </div>
         {% endif %}
       </div>
@@ -88,6 +88,17 @@
 <script>
 const uploadUrl = '{% url "admin_opml_list" %}';
 const csrfToken = '{{ csrf_token }}';
+const _t = {
+  uploading: "{% trans 'Subiendo' %}",
+  uploadedOk: "{% trans 'subido correctamente' %}",
+  networkError: "{% trans 'Error de red' %}",
+  deleteConfirm: "{% trans '¿Eliminar este archivo OPML?' %}",
+  justNow: "{% trans 'ahora mismo' %}",
+  deleteError: "{% trans 'Error al eliminar' %}",
+  noUploads: "{% trans 'No hay archivos subidos todavía.' %}",
+  copyUrl: "{% trans 'Copiar URL' %}",
+  delete: "{% trans 'Eliminar' %}",
+};
 
 // ── Drop zone ──────────────────────────────────────────────────────────────
 const dropZone = document.getElementById('drop-zone');
@@ -118,7 +129,7 @@ async function uploadFile(file) {
   const msg = document.getElementById('upload-msg');
   status.classList.remove('d-none');
   msg.className = 'small mb-0 text-muted';
-  msg.textContent = `Subiendo ${file.name}…`;
+  msg.textContent = _t.uploading + ' ' + file.name + '…';
 
   const fd = new FormData();
   fd.append('opml_file', file);
@@ -133,7 +144,7 @@ async function uploadFile(file) {
 
     if (data.ok) {
       msg.className = 'small mb-0 text-success';
-      msg.textContent = `✓ ${data.filename} subido correctamente`;
+      msg.textContent = '✓ ' + data.filename + ' ' + _t.uploadedOk;
       addUploadToList(data);
       fileInput.value = '';
     } else {
@@ -142,7 +153,7 @@ async function uploadFile(file) {
     }
   } catch (e) {
     msg.className = 'small mb-0 text-danger';
-    msg.textContent = '✗ Error de red: ' + e.message;
+    msg.textContent = '✗ ' + _t.networkError + ': ' + e.message;
   }
 
   document.getElementById('upload-progress').classList.add('d-none');
@@ -170,22 +181,20 @@ function addUploadToList(data) {
         <div class="input-group input-group-sm">
           <input type="text" class="form-control form-control-sm font-monospace"
                  value="${data.url}" readonly id="${inputId}">
-          <button class="btn btn-outline-secondary btn-copy" data-target="${inputId}" title="Copiar URL">📋</button>
+          <button class="btn btn-outline-secondary btn-copy" data-target="${inputId}" title="${_t.copyUrl}">📋</button>
         </div>
-        <p class="text-muted small mt-1 mb-0">ahora mismo</p>
+        <p class="text-muted small mt-1 mb-0">${_t.justNow}</p>
       </div>
       <button class="btn btn-sm btn-outline-danger btn-delete flex-shrink-0"
               data-id="${data.id}"
               data-url="/panel/opml/${data.id}/delete/"
-              title="Eliminar">✕</button>
+              title="${_t.delete}">✕</button>
     </div>`;
   ul.prepend(li);
 
-  // update count
   const badge = document.getElementById('upload-count');
   badge.textContent = parseInt(badge.textContent || '0') + 1;
 
-  // re-bind events for the new item
   bindItemEvents(li);
 }
 
@@ -208,7 +217,7 @@ function bindItemEvents(root) {
 
   root.querySelectorAll('.btn-delete').forEach(btn => {
     btn.addEventListener('click', async () => {
-      if (!confirm('¿Eliminar este archivo OPML?')) return;
+      if (!confirm(_t.deleteConfirm)) return;
       try {
         await fetch(btn.dataset.url, {
           method: 'POST',
@@ -225,11 +234,11 @@ function bindItemEvents(root) {
           const div = document.createElement('div');
           div.className = 'text-center text-muted py-4';
           div.id = 'empty-msg';
-          div.innerHTML = '<p class="mb-0">No hay archivos subidos todavía.</p>';
+          div.innerHTML = '<p class="mb-0">' + _t.noUploads + '</p>';
           document.getElementById('uploads-list').appendChild(div);
         }
       } catch (e) {
-        alert('Error al eliminar: ' + e.message);
+        alert(_t.deleteError + ': ' + e.message);
       }
     });
   });

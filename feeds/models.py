@@ -3,6 +3,7 @@ import uuid as _uuid
 from django.db import models
 from django.utils.html import strip_tags
 from django.utils.text import slugify
+from django.utils.translation import gettext_lazy as _
 
 
 class Category(models.Model):
@@ -17,7 +18,6 @@ class Category(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
-        """Auto-generate slug from name if not set."""
         if not self.slug:
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
@@ -36,7 +36,6 @@ class Medio(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
-        """Auto-generate slug from name if not set."""
         if not self.slug:
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
@@ -55,11 +54,10 @@ class Feed(models.Model):
     last_fetched = models.DateTimeField(null=True, blank=True)
     blocked_keywords = models.TextField(
         blank=True,
-        help_text='Palabras separadas por comas. Se excluirán artículos que las contengan en etiquetas, título o resumen.'
+        help_text=_('Palabras separadas por comas. Se excluirán artículos que las contengan en etiquetas, título o resumen.')
     )
 
     def get_blocked_keywords(self):
-        """Return a list of lowercased, stripped keywords from the blocked_keywords field."""
         return [kw.strip().lower() for kw in self.blocked_keywords.split(',') if kw.strip()]
 
     class Meta:
@@ -70,21 +68,23 @@ class Feed(models.Model):
 
 
 class SiteConfig(models.Model):
-    THEME_CHOICES = [('light', 'Claro'), ('dark', 'Oscuro'), ('system', 'Sistema (según dispositivo)')]
+    THEME_CHOICES = [
+        ('light', _('Claro')),
+        ('dark', _('Oscuro')),
+        ('system', _('Sistema (según dispositivo)')),
+    ]
     theme = models.CharField(max_length=10, choices=THEME_CHOICES, default='system')
     articles_retention_days = models.PositiveIntegerField(default=15)
 
     class Meta:
-        verbose_name = 'Configuración del sitio'
+        verbose_name = _('Configuración del sitio')
 
     @classmethod
     def get(cls):
-        """Return the singleton SiteConfig row, creating it with defaults if absent."""
         obj, _ = cls.objects.get_or_create(pk=1)
         return obj
 
     def save(self, *args, **kwargs):
-        """Force pk=1 to maintain singleton behaviour."""
         self.pk = 1
         super().save(*args, **kwargs)
 
@@ -124,7 +124,6 @@ class Article(models.Model):
 
     @property
     def is_audio(self):
-        """Return True if media_url points to an audio file (by MIME type or extension)."""
         if self.media_type.startswith('audio/'):
             return True
         url = self.media_url.lower()
@@ -132,7 +131,6 @@ class Article(models.Model):
 
     @property
     def is_video(self):
-        """Return True if media_url points to a video file (by MIME type or extension)."""
         if self.media_type.startswith('video/'):
             return True
         url = self.media_url.lower()
@@ -140,7 +138,6 @@ class Article(models.Model):
 
     @property
     def short_summary(self):
-        """Return plain-text summary truncated to ~220 chars at a word boundary."""
         text = strip_tags(self.summary)
         if len(text) > 220:
             return text[:220].rsplit(' ', 1)[0] + '…'

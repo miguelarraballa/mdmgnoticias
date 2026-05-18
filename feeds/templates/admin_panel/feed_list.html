@@ -1,11 +1,12 @@
 {% extends "admin_panel/base.html" %}
+{% load i18n %}
 {% block title %}Feeds — News Admin{% endblock %}
 {% block nav_feeds %}active{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
   <h1 class="h4 mb-0">Feeds</h1>
-  <a href="{% url 'admin_feed_add' %}" class="btn btn-primary">+ Añadir feed</a>
+  <a href="{% url 'admin_feed_add' %}" class="btn btn-primary">+ {% trans "Añadir feed" %}</a>
 </div>
 
 <div class="card">
@@ -14,11 +15,11 @@
       <thead class="table-light">
         <tr>
           <th style="width:40px"></th>
-          <th>Nombre</th>
+          <th>{% trans "Nombre" %}</th>
           <th class="d-none d-md-table-cell">URL</th>
-          <th class="d-none d-md-table-cell">Categoría</th>
-          <th>Estado</th>
-          <th>Acciones</th>
+          <th class="d-none d-md-table-cell">{% trans "Categoría" %}</th>
+          <th>{% trans "Estado" %}</th>
+          <th>{% trans "Acciones" %}</th>
         </tr>
       </thead>
       <tbody>
@@ -48,9 +49,9 @@
           </td>
           <td>
             {% if feed.is_active %}
-            <span class="badge bg-success">Activo</span>
+            <span class="badge bg-success">{% trans "Activo" %}</span>
             {% else %}
-            <span class="badge bg-secondary">Inactivo</span>
+            <span class="badge bg-secondary">{% trans "Inactivo" %}</span>
             {% endif %}
           </td>
           <td>
@@ -58,10 +59,10 @@
                     data-url="{% url 'admin_feed_test' feed.pk %}"
                     data-import-url="{% url 'admin_opml_import' feed.pk %}"
                     data-feed="{{ feed.pk }}">
-              Probar
+              {% trans "Probar" %}
             </button>
-            <a href="{% url 'admin_feed_edit' feed.pk %}" class="btn btn-sm btn-outline-secondary">Editar</a>
-            <a href="{% url 'admin_feed_delete' feed.pk %}" class="btn btn-sm btn-outline-danger">Eliminar</a>
+            <a href="{% url 'admin_feed_edit' feed.pk %}" class="btn btn-sm btn-outline-secondary">{% trans "Editar" %}</a>
+            <a href="{% url 'admin_feed_delete' feed.pk %}" class="btn btn-sm btn-outline-danger">{% trans "Eliminar" %}</a>
           </td>
         </tr>
         <tr id="feed-test-{{ feed.pk }}" class="d-none test-result-row">
@@ -70,7 +71,7 @@
           </td>
         </tr>
         {% empty %}
-        <tr><td colspan="6" class="text-center text-muted py-3">No hay feeds todavía.</td></tr>
+        <tr><td colspan="6" class="text-center text-muted py-3">{% trans "No hay feeds todavía." %}</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -82,15 +83,15 @@
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="opmlModalLabel">Importar feeds desde OPML</h5>
+        <h5 class="modal-title" id="opmlModalLabel">{% trans "Importar feeds desde OPML" %}</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
         <div class="d-flex justify-content-between align-items-center mb-3">
           <span id="opml-summary" class="text-muted small"></span>
           <div class="d-flex gap-2">
-            <button type="button" class="btn btn-sm btn-outline-secondary" id="opml-select-all">Seleccionar nuevos</button>
-            <button type="button" class="btn btn-sm btn-outline-secondary" id="opml-deselect-all">Deseleccionar todos</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="opml-select-all">{% trans "Seleccionar nuevos" %}</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="opml-deselect-all">{% trans "Deseleccionar todos" %}</button>
           </div>
         </div>
         <div id="opml-feed-list" style="max-height: 420px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: .375rem;">
@@ -99,14 +100,31 @@
       </div>
       <div class="modal-footer">
         <span id="opml-import-status" class="text-muted small me-auto"></span>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="button" class="btn btn-primary" id="opml-import-btn">Importar seleccionados</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Cancelar" %}</button>
+        <button type="button" class="btn btn-primary" id="opml-import-btn">{% trans "Importar seleccionados" %}</button>
       </div>
     </div>
   </div>
 </div>
 
 <script>
+const _t = {
+  alreadyExists: "{% trans 'ya existe' %}",
+  importing: "{% trans 'Importando…' %}",
+  importSelected: "{% trans 'Importar seleccionados' %}",
+  importN: "{% trans 'Importar %d feed' %}",
+  importNPlural: "{% trans 'Importar %d feeds' %}",
+  importedOk: "{% trans 'importado correctamente' %}",
+  importedOkPlural: "{% trans 'importados correctamente' %}",
+  importError: "{% trans 'Error al importar' %}",
+  networkError: "{% trans 'Error de red' %}",
+  testing: "{% trans 'Probando…' %}",
+  selectImport: "{% trans 'selecciona qué importar →' %}",
+  chooseFeeds: "{% trans 'Elegir feeds…' %}",
+  logoSaved: "{% trans 'Logo detectado y guardado' %}",
+  testBtn: "{% trans 'Probar' %}",
+};
+
 let _opmlModal = null;
 function getOpmlModal() {
   if (!_opmlModal) _opmlModal = new bootstrap.Modal(document.getElementById('opmlModal'));
@@ -126,9 +144,12 @@ document.getElementById('opml-deselect-all').addEventListener('click', () => {
 
 function updateImportBtn() {
   const count = document.querySelectorAll('#opml-feed-list input[type=checkbox]:checked:not(:disabled)').length;
-  document.getElementById('opml-import-btn').textContent = count > 0
-    ? `Importar ${count} feed${count !== 1 ? 's' : ''}`
-    : 'Importar seleccionados';
+  if (count > 0) {
+    const tpl = count !== 1 ? _t.importNPlural : _t.importN;
+    document.getElementById('opml-import-btn').textContent = tpl.replace('%d', count);
+  } else {
+    document.getElementById('opml-import-btn').textContent = _t.importSelected;
+  }
   document.getElementById('opml-import-btn').disabled = count === 0;
 }
 
@@ -176,7 +197,7 @@ function openOpmlModal(importUrl, feeds, message) {
     if (feed.existing) {
       const badge = document.createElement('span');
       badge.className = 'badge bg-secondary ms-2 align-self-center flex-shrink-0';
-      badge.textContent = 'ya existe';
+      badge.textContent = _t.alreadyExists;
       row.appendChild(cb);
       row.appendChild(label);
       row.appendChild(badge);
@@ -203,7 +224,7 @@ document.getElementById('opml-import-btn').addEventListener('click', async () =>
   const btn = document.getElementById('opml-import-btn');
   const status = document.getElementById('opml-import-status');
   btn.disabled = true;
-  btn.textContent = 'Importando…';
+  btn.textContent = _t.importing;
   status.textContent = '';
 
   try {
@@ -218,8 +239,8 @@ document.getElementById('opml-import-btn').addEventListener('click', async () =>
     const data = await res.json();
     if (data.ok) {
       status.className = 'text-success small me-auto';
-      status.textContent = `✓ ${data.created} feed${data.created !== 1 ? 's' : ''} importado${data.created !== 1 ? 's' : ''} correctamente`;
-      // disable imported checkboxes
+      const okText = data.created !== 1 ? _t.importedOkPlural : _t.importedOk;
+      status.textContent = `✓ ${data.created} feed${data.created !== 1 ? 's' : ''} ${okText}`;
       selected.forEach(f => {
         const idx = opmlFeeds.indexOf(f);
         const cb = document.getElementById(`opml-cb-${idx}`);
@@ -230,15 +251,15 @@ document.getElementById('opml-import-btn').addEventListener('click', async () =>
       updateImportBtn();
     } else {
       status.className = 'text-danger small me-auto';
-      status.textContent = '✗ ' + (data.message || 'Error al importar');
+      status.textContent = '✗ ' + (data.message || _t.importError);
       btn.disabled = false;
-      btn.textContent = 'Importar seleccionados';
+      btn.textContent = _t.importSelected;
     }
   } catch (e) {
     status.className = 'text-danger small me-auto';
-    status.textContent = '✗ Error de red: ' + e.message;
+    status.textContent = '✗ ' + _t.networkError + ': ' + e.message;
     btn.disabled = false;
-    btn.textContent = 'Importar seleccionados';
+    btn.textContent = _t.importSelected;
   }
 });
 
@@ -253,7 +274,7 @@ document.querySelectorAll('.btn-test').forEach(btn => {
     btn.disabled = true;
     btn.textContent = '…';
     resultRow.classList.remove('d-none', 'table-success', 'table-danger');
-    msg.textContent = 'Probando…';
+    msg.textContent = _t.testing;
     resultRow.classList.remove('d-none');
 
     try {
@@ -262,17 +283,17 @@ document.querySelectorAll('.btn-test').forEach(btn => {
 
       if (data.opml) {
         resultRow.classList.add('table-info');
-        msg.textContent = '📋 ' + data.message + ' — selecciona qué importar →';
+        msg.textContent = '📋 ' + data.message + ' — ' + _t.selectImport;
         const link = document.createElement('button');
         link.className = 'btn btn-sm btn-outline-primary ms-2';
-        link.textContent = 'Elegir feeds…';
+        link.textContent = _t.chooseFeeds;
         link.addEventListener('click', () => openOpmlModal(importUrl, data.feeds, data.message));
         msg.appendChild(link);
       } else {
         resultRow.classList.add(data.ok ? 'table-success' : 'table-danger');
         let text = (data.ok ? '✓ ' : '✗ ') + data.message;
         if (data.favicon_saved && data.favicon) {
-          text += ' · Logo detectado y guardado';
+          text += ' · ' + _t.logoSaved;
           const logoCell = document.getElementById('feed-row-' + pk).querySelector('td:first-child');
           logoCell.innerHTML = `<img src="${data.favicon}" alt="" class="feed-logo"
             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
@@ -282,11 +303,11 @@ document.querySelectorAll('.btn-test').forEach(btn => {
       }
     } catch (e) {
       resultRow.classList.add('table-danger');
-      msg.textContent = '✗ Error de red: ' + e.message;
+      msg.textContent = '✗ ' + _t.networkError + ': ' + e.message;
     }
 
     btn.disabled = false;
-    btn.textContent = 'Probar';
+    btn.textContent = _t.testBtn;
   });
 });
 </script>

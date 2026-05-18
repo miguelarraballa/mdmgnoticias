@@ -1,18 +1,19 @@
 {% extends "base.html" %}
+{% load i18n %}
 
 {% block title %}{% if active_category %}{{ active_category.name }} — {% endif %}MDMG Noticias{% endblock %}
 
 {% block content %}
 <div id="new-articles-banner" class="new-articles-banner d-none" role="alert">
   <button id="new-articles-btn" class="new-articles-btn" type="button">
-    <span id="new-articles-text">Nuevos artículos</span> ↑ Pulsa para actualizar
+    <span id="new-articles-text">{% trans "Nuevos artículos" %}</span> ↑ {% trans "Pulsa para actualizar" %}
   </button>
 </div>
 
 <div class="sort-bar">
   <select id="sort-select" class="cs cs--content">
-    <option value="id"   {% if sort == 'id'   %}selected{% endif %}>Últimas recibidas</option>
-    <option value="date" {% if sort == 'date' %}selected{% endif %}>Por fecha de publicación</option>
+    <option value="id"   {% if sort == 'id'   %}selected{% endif %}>{% trans "Últimas recibidas" %}</option>
+    <option value="date" {% if sort == 'date' %}selected{% endif %}>{% trans "Por fecha de publicación" %}</option>
   </select>
 </div>
 
@@ -25,8 +26,8 @@
 
   {% if not page_obj %}
   <div class="empty-state">
-    <p>No hay artículos todavía.</p>
-    <p class="text-muted small">Añade feeds desde el <a href="/panel/">panel de administración</a>.</p>
+    <p>{% trans "No hay artículos todavía." %}</p>
+    <p class="text-muted small">{% blocktrans %}Añade feeds desde el <a href="/panel/">panel de administración</a>.{% endblocktrans %}</p>
   </div>
   {% endif %}
 </div>
@@ -35,16 +36,22 @@
 
 <div id="loading" class="text-center py-4 d-none">
   <div class="spinner-border spinner-border-sm text-secondary" role="status">
-    <span class="visually-hidden">Cargando…</span>
+    <span class="visually-hidden">{% trans "Cargando…" %}</span>
   </div>
 </div>
 
 <div id="end-of-feed" class="text-center py-4 text-muted small d-none">
-  — Has llegado al final —
+  {% trans "— Has llegado al final —" %}
 </div>
 
 <script>
 (function () {
+  const _t = {
+    oneNew: "{% trans '1 artículo nuevo' %}",
+    manyNew: "{% trans '%d artículos nuevos' %}",
+    loadError: "{% trans 'Error cargando más artículos:' %}",
+  };
+
   // ── Sort selector ─────────────────────────────────────────────────────────
   const sortSel = document.getElementById('sort-select');
   if (sortSel) {
@@ -78,7 +85,7 @@
       timeline.insertAdjacentHTML('beforeend', data.html);
       nextPage = data.has_next ? data.next_page : null;
       if (!nextPage) { endMsg.classList.remove('d-none'); observer.disconnect(); }
-    } catch (e) { console.error('Error cargando más artículos:', e); }
+    } catch (e) { console.error(_t.loadError, e); }
     spinner.classList.add('d-none');
     loading = false;
   }
@@ -90,7 +97,7 @@
   if (nextPage) observer.observe(sentinel);
 
   // ── Polling de artículos nuevos ───────────────────────────────────────────
-  const POLL_INTERVAL = 2 * 60 * 1000; // 2 minutos
+  const POLL_INTERVAL = 2 * 60 * 1000;
   let latestId   = parseInt(timeline.dataset.latestId || '0', 10);
   const category = timeline.dataset.category;
   const medio    = timeline.dataset.medio;
@@ -107,8 +114,8 @@
       const data = await res.json();
       if (data.count > 0) {
         bannerTxt.textContent = data.count === 1
-          ? '1 artículo nuevo'
-          : data.count + ' artículos nuevos';
+          ? _t.oneNew
+          : _t.manyNew.replace('%d', data.count);
         banner.classList.remove('d-none');
       }
     } catch (e) { /* silencioso */ }

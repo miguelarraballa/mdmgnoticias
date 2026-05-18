@@ -1,4 +1,5 @@
 {% extends "admin_panel/base.html" %}
+{% load i18n %}
 {% block title %}{{ action }} feed — News Admin{% endblock %}
 {% block nav_feeds %}active{% endblock %}
 
@@ -21,8 +22,8 @@
       </div>
       {% endfor %}
       <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-primary">Guardar</button>
-        <a href="{% url 'admin_feed_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary">{% trans "Guardar" %}</button>
+        <a href="{% url 'admin_feed_list' %}" class="btn btn-outline-secondary">{% trans "Cancelar" %}</a>
       </div>
     </form>
   </div>
