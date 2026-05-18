@@ -1,6 +1,7 @@
 import uuid as _uuid
 
 from django.db import models
+from django.utils.html import strip_tags
 from django.utils.text import slugify
 
 
@@ -139,7 +140,8 @@ class Article(models.Model):
 
     @property
     def short_summary(self):
-        """Return summary truncated to ~220 chars at a word boundary."""
-        if len(self.summary) > 220:
-            return self.summary[:220].rsplit(' ', 1)[0] + '…'
-        return self.summary
+        """Return plain-text summary truncated to ~220 chars at a word boundary."""
+        text = strip_tags(self.summary)
+        if len(text) > 220:
+            return text[:220].rsplit(' ', 1)[0] + '…'
+        return text

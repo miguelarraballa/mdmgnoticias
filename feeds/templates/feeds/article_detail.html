@@ -39,7 +39,7 @@
   {% endif %}
 
   {% if article.summary %}
-  <div class="detail-body">{{ article.summary }}</div>
+  <div class="detail-body">{{ article.summary|striptags }}</div>
   {% endif %}
 
   <div class="tweet-actions mt-3 gap-3">
