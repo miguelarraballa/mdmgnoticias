@@ -1,0 +1,50 @@
+{% extends "admin_panel/base.html" %}
+{% block title %}Medios — News Admin{% endblock %}
+{% block nav_medios %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="h4 mb-0">Medios</h1>
+  <a href="{% url 'admin_medio_add' %}" class="btn btn-primary">+ Añadir medio</a>
+</div>
+
+<div class="card" style="max-width: 700px;">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th style="width:40px"></th>
+          <th>Nombre</th>
+          <th>Slug</th>
+          <th>Feeds</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for medio in medios %}
+        <tr>
+          <td class="text-center ps-3">
+            {% if medio.favicon_url %}
+            <img src="{{ medio.favicon_url }}" alt="" class="feed-logo"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <span class="feed-logo-default" style="display:none">{{ medio.name|first|upper }}</span>
+            {% else %}
+            <span class="feed-logo-default">{{ medio.name|first|upper }}</span>
+            {% endif %}
+          </td>
+          <td class="fw-medium">{{ medio.name }}</td>
+          <td class="text-muted small">{{ medio.slug }}</td>
+          <td>{{ medio.feeds.count }}</td>
+          <td>
+            <a href="{% url 'admin_medio_edit' medio.pk %}" class="btn btn-sm btn-outline-secondary">Editar</a>
+            <a href="{% url 'admin_medio_delete' medio.pk %}" class="btn btn-sm btn-outline-danger">Eliminar</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="text-center text-muted py-3">No hay medios todavía.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

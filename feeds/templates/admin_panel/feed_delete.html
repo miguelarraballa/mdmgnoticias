@@ -1,0 +1,24 @@
+{% extends "admin_panel/base.html" %}
+{% block title %}Eliminar feed — News Admin{% endblock %}
+{% block nav_feeds %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4 gap-3">
+  <a href="{% url 'admin_feed_list' %}" class="text-muted">← Feeds</a>
+  <h1 class="h4 mb-0">Eliminar feed</h1>
+</div>
+
+<div class="card border-danger" style="max-width: 500px;">
+  <div class="card-body">
+    <p>¿Seguro que quieres eliminar el feed <strong>{{ feed.name }}</strong>?</p>
+    <p class="text-muted small">Se eliminarán también todos los artículos asociados a este feed.</p>
+    <form method="post">
+      {% csrf_token %}
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+        <a href="{% url 'admin_feed_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

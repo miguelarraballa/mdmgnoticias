@@ -1,0 +1,293 @@
+{% extends "admin_panel/base.html" %}
+{% block title %}Feeds — News Admin{% endblock %}
+{% block nav_feeds %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="h4 mb-0">Feeds</h1>
+  <a href="{% url 'admin_feed_add' %}" class="btn btn-primary">+ Añadir feed</a>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0 align-middle">
+      <thead class="table-light">
+        <tr>
+          <th style="width:40px"></th>
+          <th>Nombre</th>
+          <th class="d-none d-md-table-cell">URL</th>
+          <th class="d-none d-md-table-cell">Categoría</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for feed in feeds %}
+        <tr id="feed-row-{{ feed.pk }}">
+          <td class="text-center ps-3">
+            {% if feed.medio.favicon_url %}
+            <img id="favicon-img-{{ feed.pk }}"
+                 src="{{ feed.medio.favicon_url }}"
+                 alt=""
+                 class="feed-logo"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <span class="feed-logo-default" style="display:none" title="{{ feed.name }}">{{ feed.name|first|upper }}</span>
+            {% else %}
+            <span class="feed-logo-default" title="{{ feed.name }}">{{ feed.name|first|upper }}</span>
+            {% endif %}
+          </td>
+          <td class="fw-medium">{{ feed.name }}</td>
+          <td class="d-none d-md-table-cell text-truncate" style="max-width:200px">
+            <a href="{{ feed.url }}" target="_blank" rel="noopener" class="text-muted small">{{ feed.url }}</a>
+          </td>
+          <td class="d-none d-md-table-cell">
+            {{ feed.category.name|default:"—" }}
+            {% if feed.blocked_keywords %}
+            <br><span class="text-muted small" title="{{ feed.blocked_keywords }}">🚫 {{ feed.blocked_keywords|truncatechars:40 }}</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if feed.is_active %}
+            <span class="badge bg-success">Activo</span>
+            {% else %}
+            <span class="badge bg-secondary">Inactivo</span>
+            {% endif %}
+          </td>
+          <td>
+            <button class="btn btn-sm btn-outline-info btn-test"
+                    data-url="{% url 'admin_feed_test' feed.pk %}"
+                    data-import-url="{% url 'admin_opml_import' feed.pk %}"
+                    data-feed="{{ feed.pk }}">
+              Probar
+            </button>
+            <a href="{% url 'admin_feed_edit' feed.pk %}" class="btn btn-sm btn-outline-secondary">Editar</a>
+            <a href="{% url 'admin_feed_delete' feed.pk %}" class="btn btn-sm btn-outline-danger">Eliminar</a>
+          </td>
+        </tr>
+        <tr id="feed-test-{{ feed.pk }}" class="d-none test-result-row">
+          <td colspan="6" class="py-1 px-3">
+            <span id="feed-test-msg-{{ feed.pk }}" class="small"></span>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center text-muted py-3">No hay feeds todavía.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- OPML import modal -->
+<div class="modal fade" id="opmlModal" tabindex="-1" aria-labelledby="opmlModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="opmlModalLabel">Importar feeds desde OPML</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <span id="opml-summary" class="text-muted small"></span>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="opml-select-all">Seleccionar nuevos</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="opml-deselect-all">Deseleccionar todos</button>
+          </div>
+        </div>
+        <div id="opml-feed-list" style="max-height: 420px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: .375rem;">
+          <!-- populated by JS -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <span id="opml-import-status" class="text-muted small me-auto"></span>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="opml-import-btn">Importar seleccionados</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let _opmlModal = null;
+function getOpmlModal() {
+  if (!_opmlModal) _opmlModal = new bootstrap.Modal(document.getElementById('opmlModal'));
+  return _opmlModal;
+}
+let opmlImportUrl = '';
+let opmlFeeds = [];
+
+document.getElementById('opml-select-all').addEventListener('click', () => {
+  document.querySelectorAll('#opml-feed-list input[type=checkbox]:not(:disabled)').forEach(cb => cb.checked = true);
+  updateImportBtn();
+});
+document.getElementById('opml-deselect-all').addEventListener('click', () => {
+  document.querySelectorAll('#opml-feed-list input[type=checkbox]:not(:disabled)').forEach(cb => cb.checked = false);
+  updateImportBtn();
+});
+
+function updateImportBtn() {
+  const count = document.querySelectorAll('#opml-feed-list input[type=checkbox]:checked:not(:disabled)').length;
+  document.getElementById('opml-import-btn').textContent = count > 0
+    ? `Importar ${count} feed${count !== 1 ? 's' : ''}`
+    : 'Importar seleccionados';
+  document.getElementById('opml-import-btn').disabled = count === 0;
+}
+
+function openOpmlModal(importUrl, feeds, message) {
+  opmlImportUrl = importUrl;
+  opmlFeeds = feeds;
+
+  document.getElementById('opml-summary').textContent = message;
+  document.getElementById('opml-import-status').textContent = '';
+
+  const list = document.getElementById('opml-feed-list');
+  list.innerHTML = '';
+
+  feeds.forEach((feed, i) => {
+    const row = document.createElement('div');
+    row.className = 'px-3 py-2 d-flex align-items-start gap-2' + (i % 2 === 0 ? ' bg-light' : '');
+    if (feed.existing) row.style.opacity = '0.5';
+
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.className = 'form-check-input mt-1 flex-shrink-0';
+    cb.dataset.idx = i;
+    cb.id = `opml-cb-${i}`;
+    cb.checked = !feed.existing;
+    cb.disabled = feed.existing;
+    cb.addEventListener('change', updateImportBtn);
+
+    const label = document.createElement('label');
+    label.htmlFor = `opml-cb-${i}`;
+    label.className = 'mb-0 w-100';
+    label.style.cursor = feed.existing ? 'default' : 'pointer';
+
+    const name = document.createElement('span');
+    name.className = 'fw-medium d-block';
+    name.textContent = feed.name;
+
+    const url = document.createElement('span');
+    url.className = 'text-muted small d-block text-truncate';
+    url.style.maxWidth = '500px';
+    url.textContent = feed.url;
+
+    label.appendChild(name);
+    label.appendChild(url);
+
+    if (feed.existing) {
+      const badge = document.createElement('span');
+      badge.className = 'badge bg-secondary ms-2 align-self-center flex-shrink-0';
+      badge.textContent = 'ya existe';
+      row.appendChild(cb);
+      row.appendChild(label);
+      row.appendChild(badge);
+    } else {
+      row.appendChild(cb);
+      row.appendChild(label);
+    }
+
+    list.appendChild(row);
+  });
+
+  updateImportBtn();
+  getOpmlModal().show();
+}
+
+document.getElementById('opml-import-btn').addEventListener('click', async () => {
+  const selected = opmlFeeds.filter((f, i) => {
+    const cb = document.getElementById(`opml-cb-${i}`);
+    return cb && cb.checked && !cb.disabled;
+  });
+
+  if (!selected.length) return;
+
+  const btn = document.getElementById('opml-import-btn');
+  const status = document.getElementById('opml-import-status');
+  btn.disabled = true;
+  btn.textContent = 'Importando…';
+  status.textContent = '';
+
+  try {
+    const res = await fetch(opmlImportUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '',
+      },
+      body: JSON.stringify({feeds: selected}),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      status.className = 'text-success small me-auto';
+      status.textContent = `✓ ${data.created} feed${data.created !== 1 ? 's' : ''} importado${data.created !== 1 ? 's' : ''} correctamente`;
+      // disable imported checkboxes
+      selected.forEach(f => {
+        const idx = opmlFeeds.indexOf(f);
+        const cb = document.getElementById(`opml-cb-${idx}`);
+        if (cb) { cb.checked = false; cb.disabled = true; }
+        const row = cb?.closest('div');
+        if (row) row.style.opacity = '0.5';
+      });
+      updateImportBtn();
+    } else {
+      status.className = 'text-danger small me-auto';
+      status.textContent = '✗ ' + (data.message || 'Error al importar');
+      btn.disabled = false;
+      btn.textContent = 'Importar seleccionados';
+    }
+  } catch (e) {
+    status.className = 'text-danger small me-auto';
+    status.textContent = '✗ Error de red: ' + e.message;
+    btn.disabled = false;
+    btn.textContent = 'Importar seleccionados';
+  }
+});
+
+document.querySelectorAll('.btn-test').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const pk = btn.dataset.feed;
+    const url = btn.dataset.url;
+    const importUrl = btn.dataset.importUrl;
+    const resultRow = document.getElementById('feed-test-' + pk);
+    const msg = document.getElementById('feed-test-msg-' + pk);
+
+    btn.disabled = true;
+    btn.textContent = '…';
+    resultRow.classList.remove('d-none', 'table-success', 'table-danger');
+    msg.textContent = 'Probando…';
+    resultRow.classList.remove('d-none');
+
+    try {
+      const res = await fetch(url, {headers: {'X-Requested-With': 'XMLHttpRequest'}});
+      const data = await res.json();
+
+      if (data.opml) {
+        resultRow.classList.add('table-info');
+        msg.textContent = '📋 ' + data.message + ' — selecciona qué importar →';
+        const link = document.createElement('button');
+        link.className = 'btn btn-sm btn-outline-primary ms-2';
+        link.textContent = 'Elegir feeds…';
+        link.addEventListener('click', () => openOpmlModal(importUrl, data.feeds, data.message));
+        msg.appendChild(link);
+      } else {
+        resultRow.classList.add(data.ok ? 'table-success' : 'table-danger');
+        let text = (data.ok ? '✓ ' : '✗ ') + data.message;
+        if (data.favicon_saved && data.favicon) {
+          text += ' · Logo detectado y guardado';
+          const logoCell = document.getElementById('feed-row-' + pk).querySelector('td:first-child');
+          logoCell.innerHTML = `<img src="${data.favicon}" alt="" class="feed-logo"
+            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <span class="feed-logo-default" style="display:none">${logoCell.querySelector('.feed-logo-default')?.textContent || ''}</span>`;
+        }
+        msg.textContent = text;
+      }
+    } catch (e) {
+      resultRow.classList.add('table-danger');
+      msg.textContent = '✗ Error de red: ' + e.message;
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Probar';
+  });
+});
+</script>
+{% endblock %}

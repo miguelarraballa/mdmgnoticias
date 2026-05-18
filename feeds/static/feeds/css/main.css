@@ -1,0 +1,433 @@
+/* -------------------------------------------------------
+   CSS custom properties — light (default) & dark
+------------------------------------------------------- */
+:root {
+  --bg:        #f7f9fa;
+  --card-bg:   #ffffff;
+  --border:    #e1e8ed;
+  --text:      #14171a;
+  --muted:     #536471;
+  --nav-bg:    #ffffff;
+  --cat-bg:    #e8f5fe;
+  --cat-color: #1d9bf0;
+  --link:      #1d9bf0;
+}
+[data-bs-theme="dark"] {
+  --bg:        #15202b;
+  --card-bg:   #192734;
+  --border:    #38444d;
+  --text:      #d9d9d9;
+  --muted:     #8899a6;
+  --nav-bg:    #192734;
+  --cat-bg:    #1e3a5f;
+  --cat-color: #6cb8f5;
+  --link:      #6cb8f5;
+}
+
+/* -------------------------------------------------------
+   Base & typography
+------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 17px;
+  background: var(--bg);
+  color: var(--text);
+  margin: 0;
+}
+
+a { color: inherit; text-decoration: none; }
+a:hover { text-decoration: none; }
+
+/* -------------------------------------------------------
+   Navbar
+------------------------------------------------------- */
+#main-nav {
+  background: var(--nav-bg);
+  border-bottom: 1px solid #e1e8ed;
+  padding: 0;
+}
+
+#main-nav .navbar-brand {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text);
+  padding: .6rem 1rem;
+}
+
+.brand-logo {
+  height: 38px;
+  width: auto;
+  display: inline-block;
+  /* dark on white/light background */
+  filter: none;
+}
+[data-bs-theme="dark"] .brand-logo {
+  filter: invert(1);
+}
+/* Admin navbar is always dark, so always invert */
+.brand-logo-admin {
+  filter: invert(1);
+}
+
+/* -------------------------------------------------------
+   Custom selects  (.cs base + .cs--nav / .cs--content variants)
+------------------------------------------------------- */
+.cs {
+  appearance: none;
+  -webkit-appearance: none;
+  font-family: inherit;
+  font-weight: 500;
+  border-radius: 9999px;
+  cursor: pointer;
+  padding: .3rem 2rem .3rem .85rem;
+  background-repeat: no-repeat;
+  background-position: right .65rem center;
+  background-size: .95rem;
+  transition: border-color .15s, background-color .15s;
+}
+
+/* Navbar variant — always dark background */
+.cs--nav {
+  font-size: .9rem;
+  color: #fff;
+  background-color: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.25);
+  max-width: 180px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='3 6 8 11 13 6'/%3E%3C/svg%3E");
+}
+.cs--nav option { background: #14171a; color: #fff; }
+.cs--nav:focus  { outline: none; border-color: rgba(255,255,255,.55); }
+.cs--nav:hover  { background-color: rgba(255,255,255,.18); }
+
+/* Content-area variant — respects light/dark theme */
+.cs--content {
+  font-size: .82rem;
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23536471' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='3 6 8 11 13 6'/%3E%3C/svg%3E");
+}
+.cs--content:hover { border-color: var(--muted); }
+.cs--content:focus { outline: none; border-color: var(--link); }
+[data-bs-theme="dark"] .cs--content {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%238899a6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='3 6 8 11 13 6'/%3E%3C/svg%3E");
+}
+[data-bs-theme="dark"] .cs--content option { background: var(--card-bg); }
+
+/* -------------------------------------------------------
+   Refresh button
+------------------------------------------------------- */
+.refresh-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s, color .15s, border-color .15s, transform .3s;
+  padding: 0;
+}
+.refresh-btn:hover {
+  background: var(--cat-bg);
+  color: var(--link);
+  border-color: var(--link);
+}
+.refresh-btn:active { transform: rotate(360deg); }
+.refresh-btn:disabled { opacity: .5; cursor: default; }
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* -------------------------------------------------------
+   Category bar
+------------------------------------------------------- */
+#cat-bar {
+  border-top: 1px solid var(--border);
+  scrollbar-width: none;
+  margin-top: 6px;
+}
+#cat-bar::-webkit-scrollbar { display: none; }
+
+.cat-pill {
+  display: inline-block;
+  padding: .3rem .85rem;
+  border-radius: 9999px;
+  font-size: .9rem;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  transition: background .15s, color .15s;
+}
+.cat-pill:hover { background: var(--cat-bg); color: var(--cat-color); border-color: var(--link); }
+.cat-pill.active { background: var(--link); color: #fff; border-color: var(--link); }
+
+/* -------------------------------------------------------
+   New articles banner
+------------------------------------------------------- */
+.new-articles-banner {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  text-align: center;
+  padding: .4rem 1rem;
+  background: var(--link);
+}
+
+.new-articles-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: .95rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  letter-spacing: .01em;
+}
+.new-articles-btn:hover { text-decoration: underline; }
+
+/* -------------------------------------------------------
+   Timeline
+------------------------------------------------------- */
+.timeline {
+  display: flex;
+  flex-direction: column;
+}
+
+.tweet-card {
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--border);
+  padding: 1rem 1rem .75rem;
+  transition: background .1s;
+}
+.tweet-card:hover { background: var(--bg); }
+.tweet-card:first-child { border-top: 1px solid var(--border); }
+
+/* Source line */
+.tweet-meta {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  font-size: .88rem;
+  color: var(--muted);
+  margin-bottom: .35rem;
+  flex-wrap: wrap;
+}
+
+.feed-favicon {
+  width: 32px;
+  height: 32px;
+  border-radius: 0;
+  object-fit: contain;
+}
+
+.feed-name {
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.cat-badge {
+  font-size: .78rem;
+  background: var(--cat-bg);
+  color: var(--cat-color);
+  border-radius: 4px;
+  padding: .1rem .4rem;
+  font-weight: 500;
+}
+
+.tweet-time {
+  margin-left: auto;
+  font-size: .82rem;
+  color: var(--muted);
+}
+
+/* Title */
+.tweet-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.35;
+  margin: 0 0 .4rem;
+}
+.tweet-title a { color: var(--text); }
+.tweet-title a:hover { color: var(--link); }
+
+/* Body */
+.tweet-body {
+  font-size: 1rem;
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 0 0 .5rem;
+}
+
+/* Actions */
+.tweet-actions { display: flex; justify-content: flex-end; }
+
+.read-link {
+  font-size: .9rem;
+  color: var(--link);
+  font-weight: 500;
+}
+.read-link:hover { text-decoration: underline; }
+
+.share-wa {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  font-size: .9rem;
+  font-weight: 500;
+  color: #25d366;
+  transition: opacity .15s;
+}
+.share-wa:hover { opacity: .8; }
+
+/* -------------------------------------------------------
+   Card media (image in wall)
+------------------------------------------------------- */
+.card-media {
+  margin: .5rem 0 .6rem;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--border);
+  max-height: 280px;
+}
+.card-media-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: 280px;
+  object-fit: cover;
+  transition: opacity .2s;
+}
+.card-media-img:hover { opacity: .92; }
+
+/* -------------------------------------------------------
+   Media player (audio / video)
+------------------------------------------------------- */
+.card-media-player {
+  margin: .5rem 0 .6rem;
+}
+
+.media-play-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  background: var(--cat-bg);
+  color: var(--cat-color);
+  border: 1px solid var(--cat-color);
+  border-radius: 20px;
+  padding: .35rem .9rem;
+  font-size: .85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, opacity .15s;
+}
+.media-play-btn:hover { opacity: .85; }
+
+.detail-media-player {
+  margin-bottom: 1rem;
+}
+.detail-media-player audio {
+  width: 100%;
+  border-radius: 8px;
+}
+
+/* -------------------------------------------------------
+   Detail view
+------------------------------------------------------- */
+.detail-card { border-bottom: none !important; }
+
+.detail-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1.3;
+  margin: .5rem 0 1rem;
+}
+
+.detail-image {
+  width: 100%;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  max-height: 360px;
+  object-fit: cover;
+}
+
+.detail-body {
+  font-size: .95rem;
+  color: var(--text);
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+/* -------------------------------------------------------
+   Empty state
+------------------------------------------------------- */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--muted);
+}
+.empty-state p:first-child { font-weight: 600; font-size: 1.05rem; }
+
+/* -------------------------------------------------------
+   Sort bar
+------------------------------------------------------- */
+.sort-bar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: .6rem .85rem;
+  margin: .5rem 0 .75rem;
+}
+
+/* -------------------------------------------------------
+   Responsive tweaks
+------------------------------------------------------- */
+@media (max-width: 639px) {
+  .brand-text { display: none; }
+}
+@media (max-width: 511px) {
+  .tweet-time {
+    flex-basis: 100%;
+    margin-left: 38px; /* align under feed-name, past favicon+gap */
+    margin-top: .1rem;
+  }
+}
+
+@media (min-width: 480px) {
+  .tweet-card { padding: 1.1rem 1.25rem .85rem; }
+  .tweet-title { font-size: 1.15rem; }
+}
+
+@media (min-width: 768px) {
+  .tweet-card {
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+  }
+  .tweet-card:first-child {
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+  }
+  .tweet-card:last-of-type {
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .pagination-nav {
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+  }
+}

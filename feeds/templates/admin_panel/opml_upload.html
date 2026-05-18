@@ -1,0 +1,241 @@
+{% extends "admin_panel/base.html" %}
+{% block title %}OPML subidos — News Admin{% endblock %}
+{% block nav_opml %}active{% endblock %}
+
+{% block content %}
+<h1 class="h4 mb-4">OPML subidos</h1>
+
+<div class="row g-4">
+
+  <!-- Upload card -->
+  <div class="col-12 col-lg-5">
+    <div class="card">
+      <div class="card-header fw-semibold">Subir archivo OPML</div>
+      <div class="card-body">
+        <p class="text-muted small mb-3">
+          Sube un archivo <code>.opml</code> desde tu ordenador. Se generará una URL que puedes
+          añadir como feed en el listado de Feeds.
+        </p>
+        <div id="drop-zone"
+             class="border border-2 border-dashed rounded-3 text-center p-4 mb-3"
+             style="cursor:pointer; border-color:#dee2e6 !important; transition: border-color .2s, background .2s">
+          <div class="mb-2" style="font-size:2rem">📂</div>
+          <p class="mb-1 fw-medium">Arrastra aquí tu archivo OPML</p>
+          <p class="text-muted small mb-2">o</p>
+          <label class="btn btn-outline-primary btn-sm" for="opml-file-input">
+            Seleccionar archivo
+          </label>
+          <input type="file" id="opml-file-input" accept=".opml,.xml" class="d-none">
+        </div>
+        <div id="upload-status" class="d-none">
+          <div id="upload-progress" class="progress mb-2" style="height:6px">
+            <div class="progress-bar progress-bar-striped progress-bar-animated w-100"></div>
+          </div>
+          <p id="upload-msg" class="small mb-0"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Uploaded files list -->
+  <div class="col-12 col-lg-7">
+    <div class="card">
+      <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
+        <span>Archivos subidos</span>
+        <span class="badge bg-secondary" id="upload-count">{{ uploads|length }}</span>
+      </div>
+      <div id="uploads-list">
+        {% if uploads %}
+        <ul class="list-group list-group-flush" id="uploads-ul">
+          {% for u in uploads %}
+          <li class="list-group-item" id="upload-item-{{ u.id }}">
+            <div class="d-flex justify-content-between align-items-start gap-2">
+              <div class="flex-grow-1 min-width-0">
+                <p class="fw-medium mb-1 text-truncate">{{ u.filename }}</p>
+                <div class="input-group input-group-sm">
+                  <input type="text"
+                         class="form-control form-control-sm font-monospace"
+                         value="{{ request.scheme }}://{{ request.get_host }}{% url 'opml_serve' u.pk %}"
+                         readonly
+                         id="url-{{ u.id }}">
+                  <button class="btn btn-outline-secondary btn-copy"
+                          data-target="url-{{ u.id }}"
+                          title="Copiar URL">
+                    📋
+                  </button>
+                </div>
+                <p class="text-muted small mt-1 mb-0">{{ u.uploaded_at|timesince }} atrás</p>
+              </div>
+              <button class="btn btn-sm btn-outline-danger btn-delete flex-shrink-0"
+                      data-id="{{ u.id }}"
+                      data-url="{% url 'admin_opml_delete' u.pk %}"
+                      title="Eliminar">✕</button>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="text-center text-muted py-4" id="empty-msg">
+          <p class="mb-0">No hay archivos subidos todavía.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const uploadUrl = '{% url "admin_opml_list" %}';
+const csrfToken = '{{ csrf_token }}';
+
+// ── Drop zone ──────────────────────────────────────────────────────────────
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('opml-file-input');
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => {
+  e.preventDefault();
+  dropZone.style.background = '#f0f7ff';
+  dropZone.style.borderColor = '#1d9bf0 !important';
+});
+dropZone.addEventListener('dragleave', () => {
+  dropZone.style.background = '';
+});
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.style.background = '';
+  const file = e.dataTransfer.files[0];
+  if (file) uploadFile(file);
+});
+fileInput.addEventListener('change', () => {
+  if (fileInput.files[0]) uploadFile(fileInput.files[0]);
+});
+
+// ── Upload ─────────────────────────────────────────────────────────────────
+async function uploadFile(file) {
+  const status = document.getElementById('upload-status');
+  const msg = document.getElementById('upload-msg');
+  status.classList.remove('d-none');
+  msg.className = 'small mb-0 text-muted';
+  msg.textContent = `Subiendo ${file.name}…`;
+
+  const fd = new FormData();
+  fd.append('opml_file', file);
+
+  try {
+    const res = await fetch(uploadUrl, {
+      method: 'POST',
+      headers: {'X-CSRFToken': csrfToken},
+      body: fd,
+    });
+    const data = await res.json();
+
+    if (data.ok) {
+      msg.className = 'small mb-0 text-success';
+      msg.textContent = `✓ ${data.filename} subido correctamente`;
+      addUploadToList(data);
+      fileInput.value = '';
+    } else {
+      msg.className = 'small mb-0 text-danger';
+      msg.textContent = '✗ ' + data.message;
+    }
+  } catch (e) {
+    msg.className = 'small mb-0 text-danger';
+    msg.textContent = '✗ Error de red: ' + e.message;
+  }
+
+  document.getElementById('upload-progress').classList.add('d-none');
+}
+
+function addUploadToList(data) {
+  document.getElementById('empty-msg')?.remove();
+
+  let ul = document.getElementById('uploads-ul');
+  if (!ul) {
+    ul = document.createElement('ul');
+    ul.className = 'list-group list-group-flush';
+    ul.id = 'uploads-ul';
+    document.getElementById('uploads-list').appendChild(ul);
+  }
+
+  const inputId = `url-${data.id}`;
+  const li = document.createElement('li');
+  li.className = 'list-group-item';
+  li.id = `upload-item-${data.id}`;
+  li.innerHTML = `
+    <div class="d-flex justify-content-between align-items-start gap-2">
+      <div class="flex-grow-1 min-width-0">
+        <p class="fw-medium mb-1 text-truncate">${data.filename}</p>
+        <div class="input-group input-group-sm">
+          <input type="text" class="form-control form-control-sm font-monospace"
+                 value="${data.url}" readonly id="${inputId}">
+          <button class="btn btn-outline-secondary btn-copy" data-target="${inputId}" title="Copiar URL">📋</button>
+        </div>
+        <p class="text-muted small mt-1 mb-0">ahora mismo</p>
+      </div>
+      <button class="btn btn-sm btn-outline-danger btn-delete flex-shrink-0"
+              data-id="${data.id}"
+              data-url="/panel/opml/${data.id}/delete/"
+              title="Eliminar">✕</button>
+    </div>`;
+  ul.prepend(li);
+
+  // update count
+  const badge = document.getElementById('upload-count');
+  badge.textContent = parseInt(badge.textContent || '0') + 1;
+
+  // re-bind events for the new item
+  bindItemEvents(li);
+}
+
+// ── Copy & Delete ──────────────────────────────────────────────────────────
+function bindItemEvents(root) {
+  root.querySelectorAll('.btn-copy').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const inp = document.getElementById(btn.dataset.target);
+      navigator.clipboard.writeText(inp.value).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = '✓';
+        btn.classList.replace('btn-outline-secondary', 'btn-success');
+        setTimeout(() => {
+          btn.textContent = orig;
+          btn.classList.replace('btn-success', 'btn-outline-secondary');
+        }, 1500);
+      });
+    });
+  });
+
+  root.querySelectorAll('.btn-delete').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('¿Eliminar este archivo OPML?')) return;
+      try {
+        await fetch(btn.dataset.url, {
+          method: 'POST',
+          headers: {'X-CSRFToken': csrfToken},
+        });
+        const item = document.getElementById(`upload-item-${btn.dataset.id}`);
+        item.remove();
+        const badge = document.getElementById('upload-count');
+        const newCount = parseInt(badge.textContent || '1') - 1;
+        badge.textContent = newCount;
+        if (newCount === 0) {
+          const ul = document.getElementById('uploads-ul');
+          ul?.remove();
+          const div = document.createElement('div');
+          div.className = 'text-center text-muted py-4';
+          div.id = 'empty-msg';
+          div.innerHTML = '<p class="mb-0">No hay archivos subidos todavía.</p>';
+          document.getElementById('uploads-list').appendChild(div);
+        }
+      } catch (e) {
+        alert('Error al eliminar: ' + e.message);
+      }
+    });
+  });
+}
+
+// Bind events for server-rendered items
+bindItemEvents(document);
+</script>
+{% endblock %}

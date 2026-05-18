@@ -1,0 +1,153 @@
+{% extends "admin_panel/base.html" %}
+{% block title %}Dashboard — News Admin{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="h4 mb-0">Dashboard</h1>
+  <div class="d-flex align-items-center gap-2">
+    <span id="fetch-status" class="text-muted small"></span>
+    <button id="fetch-btn" class="btn btn-success"
+            data-url="{% url 'admin_fetch_batch' %}"
+            data-csrf="{{ csrf_token }}">
+      ↻ Actualizar feeds
+    </button>
+  </div>
+</div>
+<div id="fetch-progress" class="mb-3" style="display:none">
+  <div class="progress" style="height:6px">
+    <div id="fetch-bar" class="progress-bar progress-bar-striped progress-bar-animated"
+         role="progressbar" style="width:0%"></div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-4">
+    <div class="card text-center">
+      <div class="card-body">
+        <div class="h2 fw-bold text-primary">{{ article_count }}</div>
+        <div class="text-muted small">Artículos</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4">
+    <div class="card text-center">
+      <div class="card-body">
+        <div class="h2 fw-bold text-success">{{ feed_count }}</div>
+        <div class="text-muted small">Feeds</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4">
+    <div class="card text-center">
+      <div class="card-body">
+        <div class="h2 fw-bold text-warning">{{ category_count }}</div>
+        <div class="text-muted small">Categorías</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span>Feeds activos</span>
+    <a href="{% url 'admin_feed_add' %}" class="btn btn-sm btn-primary">+ Añadir feed</a>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover mb-0 small">
+      <thead class="table-light">
+        <tr>
+          <th>Nombre</th>
+          <th class="d-none d-md-table-cell">Categoría</th>
+          <th class="d-none d-md-table-cell">Última actualización</th>
+          <th>Estado</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for feed in feeds %}
+        <tr>
+          <td>{{ feed.name }}</td>
+          <td class="d-none d-md-table-cell">{{ feed.category.name|default:"—" }}</td>
+          <td class="d-none d-md-table-cell">{{ feed.last_fetched|date:"d/m/Y H:i"|default:"Nunca" }}</td>
+          <td>
+            {% if feed.is_active %}
+            <span class="badge bg-success">Activo</span>
+            {% else %}
+            <span class="badge bg-secondary">Inactivo</span>
+            {% endif %}
+          </td>
+          <td>
+            <a href="{% url 'admin_feed_edit' feed.pk %}" class="btn btn-xs btn-outline-secondary btn-sm py-0 px-1">Editar</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="text-center text-muted py-3">No hay feeds. <a href="{% url 'admin_feed_add' %}">Añade uno</a>.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const btn = document.getElementById('fetch-btn');
+  const status = document.getElementById('fetch-status');
+  const progress = document.getElementById('fetch-progress');
+  const bar = document.getElementById('fetch-bar');
+  if (!btn) return;
+
+  async function runBatches(url, csrf, batchSize) {
+    btn.disabled = true;
+    progress.style.display = 'block';
+    bar.style.width = '0%';
+    let offset = 0, totalNew = 0;
+
+    try {
+      while (true) {
+        const resp = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrf,
+          },
+          body: JSON.stringify({offset, batch_size: batchSize}),
+        });
+        const data = await resp.json();
+        if (!data.ok) {
+          status.textContent = data.message || 'Error';
+          status.className = 'text-danger small';
+          progress.style.display = 'none';
+          btn.disabled = false;
+          return;
+        }
+        totalNew += data.new_articles || 0;
+        const pct = data.total > 0 ? Math.round((data.processed / data.total) * 100) : 100;
+        bar.style.width = pct + '%';
+        status.textContent = `${data.processed}/${data.total} feeds · +${totalNew} artículos`;
+        status.className = 'text-muted small';
+
+        if (data.done) {
+          bar.classList.remove('progress-bar-animated');
+          bar.classList.add('bg-success');
+          setTimeout(() => { progress.style.display = 'none'; location.reload(); }, 1200);
+          return;
+        }
+        offset = data.next_offset;
+      }
+    } catch (e) {
+      status.textContent = 'Error de red';
+      status.className = 'text-danger small';
+      progress.style.display = 'none';
+      btn.disabled = false;
+    }
+  }
+
+  btn.addEventListener('click', () => {
+    runBatches(btn.dataset.url, btn.dataset.csrf, 1);
+  });
+})();
+</script>
+{% endblock %}

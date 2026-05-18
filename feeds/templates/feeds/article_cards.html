@@ -1,0 +1,51 @@
+{% for article in page_obj %}
+<article class="tweet-card">
+  <div class="tweet-meta">
+    {% if article.feed.medio.favicon_url %}
+    <img src="{{ article.feed.medio.favicon_url }}" alt="" class="feed-favicon" onerror="this.style.display='none'">
+    {% endif %}
+    <span class="feed-name">{% if article.feed.medio %}{{ article.feed.medio.name }} — {% endif %}{{ article.feed.name }}</span>
+    {% if article.feed.category %}
+    <span class="cat-badge">{{ article.feed.category.name }}</span>
+    {% endif %}
+    <span class="tweet-time">{{ article.published_at|timesince }} atrás</span>
+  </div>
+  <h2 class="tweet-title">
+    <a href="/a/{{ article.pk }}/">{{ article.title }}</a>
+  </h2>
+  {% if article.short_summary %}
+  <p class="tweet-body">{{ article.short_summary }}</p>
+  {% endif %}
+  {% if article.image_url %}
+  <div class="card-media">
+    <a href="/a/{{ article.pk }}/">
+      <img src="{{ article.image_url }}"
+           alt="{{ article.title }}"
+           class="card-media-img"
+           loading="lazy"
+           onerror="this.closest('.card-media').remove()">
+    </a>
+  </div>
+  {% endif %}
+  {% if article.media_url and article.is_audio %}
+  <div class="card-media-player" data-src="{{ article.media_url }}" data-kind="audio">
+    <button class="media-play-btn" onclick="initPlayer(this)" type="button">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18A9 9 0 0 0 12 3zm-1.5 5.25l6 3.75-6 3.75V8.25z"/></svg>
+      Reproducir audio
+    </button>
+  </div>
+  {% elif article.media_url and article.is_video %}
+  <div class="card-media-player" data-src="{{ article.media_url }}" data-kind="video">
+    <button class="media-play-btn" onclick="initPlayer(this)" type="button">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M4 6.75A2.75 2.75 0 0 1 6.75 4h10.5A2.75 2.75 0 0 1 20 6.75v10.5A2.75 2.75 0 0 1 17.25 20H6.75A2.75 2.75 0 0 1 4 17.25V6.75zm8 1.5-5 3 5 3v-6z"/></svg>
+      Reproducir vídeo
+    </button>
+  </div>
+  {% endif %}
+  <div class="tweet-actions">
+    <a href="{{ article.link }}" target="_blank" rel="noopener noreferrer" class="read-link">
+      Leer artículo original →
+    </a>
+  </div>
+</article>
+{% endfor %}

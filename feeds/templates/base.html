@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}MDMG Noticias{% endblock %}</title>
+  {% load static %}
+  <link rel="icon" type="image/x-icon" href="{% static 'feeds/img/favicon.ico' %}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'feeds/img/favicon-32x32.png' %}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{% static 'feeds/img/favicon-16x16.png' %}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'feeds/img/apple-touch-icon.png' %}">
+  <link rel="manifest" href="{% static 'feeds/img/site.webmanifest' %}">
+  <meta name="theme-color" content="#1a2a4a">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="{% static 'feeds/css/main.css' %}">
+  <script>
+    (function () {
+      var theme = '{{ site_config.theme }}';
+      var el = document.documentElement;
+      if (theme === 'dark') {
+        el.setAttribute('data-bs-theme', 'dark');
+      } else if (theme === 'system') {
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          el.setAttribute('data-bs-theme', 'dark');
+        }
+      }
+    })();
+  </script>
+</head>
+<body>
+
+<nav class="navbar navbar-dark sticky-top" id="main-nav">
+  <div class="container-fluid px-3 gap-2">
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/"><img src="{% static 'feeds/img/logo.svg' %}" alt="MDMG Noticias" class="brand-logo"> <span class="brand-text">MDMG Noticias</span></a>
+
+    {% if medios %}
+    <select id="medio-select" class="cs cs--nav">
+      <option value="/">Todos los medios</option>
+      {% for medio in medios %}
+      <option value="/m/{{ medio.slug }}/" {% if active_medio.slug == medio.slug %}selected{% endif %}>{{ medio.name }}</option>
+      {% endfor %}
+    </select>
+    {% endif %}
+
+    <div class="ms-auto d-flex align-items-center gap-2">
+      <span id="refresh-status" class="text-white small" style="display:none!important"></span>
+      <button id="refresh-btn" class="refresh-btn" title="Actualizar noticias" data-url="{% url 'public_fetch' %}" data-csrf="{{ csrf_token }}">&#8635;</button>
+    </div>
+  </div>
+  {% if categories %}
+  <div class="container-fluid px-0 overflow-auto" id="cat-bar">
+    <div class="d-flex gap-1 px-3 py-1 flex-nowrap">
+      <a href="/" class="cat-pill {% if not active_category %}active{% endif %}">Todo</a>
+      {% for cat in categories %}
+      <a href="/c/{{ cat.slug }}/" class="cat-pill {% if active_category.slug == cat.slug %}active{% endif %}">{{ cat.name }}</a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</nav>
+
+<main class="container-fluid px-0 px-md-3 py-3" style="max-width: 680px; margin: 0 auto;">
+  {% if messages %}
+  <div class="px-3">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% block content %}{% endblock %}
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  function initPlayer(btn) {
+    const container = btn.closest('.card-media-player');
+    const src = container.dataset.src;
+    const kind = container.dataset.kind;
+    const el = document.createElement(kind === 'video' ? 'video' : 'audio');
+    el.controls = true;
+    el.preload = 'auto';
+    el.src = src;
+    if (kind === 'video') {
+      el.style.cssText = 'width:100%;border-radius:8px;display:block;';
+    }
+    container.innerHTML = '';
+    container.appendChild(el);
+    el.play().catch(() => {});
+  }
+</script>
+<script>
+  const sel = document.getElementById('medio-select');
+  if (sel) sel.addEventListener('change', () => location.href = sel.value);
+
+  (function () {
+    const btn = document.getElementById('refresh-btn');
+    const status = document.getElementById('refresh-status');
+    if (!btn) return;
+
+    async function runBatches(url, csrf, batchSize) {
+      btn.disabled = true;
+      btn.style.animation = 'spin 1s linear infinite';
+      status.style.setProperty('display', 'inline', 'important');
+      let offset = 0, totalNew = 0;
+
+      try {
+        while (true) {
+          status.textContent = offset === 0 ? 'Actualizando…' : `${offset} feeds…`;
+          const resp = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': csrf,
+              'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify({offset, batch_size: batchSize}),
+          });
+          const data = await resp.json();
+          if (!data.ok) {
+            status.textContent = data.cooldown
+              ? `Espera ${data.cooldown}s`
+              : (data.message || 'Error');
+            setTimeout(() => { status.style.setProperty('display', 'none', 'important'); }, 3000);
+            return;
+          }
+          totalNew += data.new_articles || 0;
+          if (data.done) {
+            status.textContent = totalNew > 0 ? `+${totalNew} nuevas` : 'Al día';
+            setTimeout(() => {
+              status.style.setProperty('display', 'none', 'important');
+              location.reload();
+            }, 1500);
+            return;
+          }
+          offset = data.next_offset;
+        }
+      } catch (e) {
+        status.textContent = 'Error de red';
+        setTimeout(() => { status.style.setProperty('display', 'none', 'important'); }, 3000);
+      } finally {
+        btn.disabled = false;
+        btn.style.animation = '';
+      }
+    }
+
+    btn.addEventListener('click', () => {
+      runBatches(btn.dataset.url, btn.dataset.csrf, 1);
+    });
+  })();
+</script>
+</body>
+</html>
