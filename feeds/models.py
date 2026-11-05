@@ -1,6 +1,9 @@
 import uuid as _uuid
+from datetime import timedelta
 
 from django.db import models
+from django.db.models import Count, Q
+from django.utils import timezone
 from django.utils.html import strip_tags
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
@@ -102,6 +105,33 @@ class UploadedOPML(models.Model):
         return self.filename
 
 
+class Tag(models.Model):
+    name = models.CharField(max_length=80)
+    slug = models.SlugField(max_length=100, unique=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+    @classmethod
+    def for_name(cls, name):
+        """Return the tag for this name, unifying case and accent variants; None if unsluggable."""
+        slug = slugify(name)[:100].strip('-')
+        if not slug:
+            return None
+        return cls.objects.get_or_create(slug=slug, defaults={'name': name})[0]
+
+    @classmethod
+    def trending(cls, limit=10, hours=48):
+        """Most used tags in recent articles. Future-dated articles don't count."""
+        now = timezone.now()
+        recent = Q(articles__published_at__range=(now - timedelta(hours=hours), now))
+        return (cls.objects.annotate(uses=Count('articles', filter=recent))
+                .filter(uses__gt=0).order_by('-uses', 'name')[:limit])
+
+
 class Article(models.Model):
     feed = models.ForeignKey(Feed, on_delete=models.CASCADE, related_name='articles')
     title = models.CharField(max_length=500)
@@ -112,6 +142,8 @@ class Article(models.Model):
     image_url = models.URLField(max_length=1000, blank=True)
     media_url = models.URLField(max_length=1000, blank=True, default='')
     media_type = models.CharField(max_length=100, blank=True, default='')
+    tags = models.ManyToManyField(Tag, blank=True, related_name='articles')
+    tagged_at = models.DateTimeField(null=True, blank=True, db_index=True)
 
     class Meta:
         ordering = ['-published_at']

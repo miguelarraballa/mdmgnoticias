@@ -1,0 +1,10 @@
+{% load i18n %}
+{% with tags=article.tags.all %}
+{% if tags %}
+<div class="tag-list" aria-label="{% trans 'Etiquetas' %}">
+  {% for tag in tags %}
+  <a href="{% url 'article_list_tag' tag.slug %}" class="tag-link">#{{ tag.name }}</a>
+  {% endfor %}
+</div>
+{% endif %}
+{% endwith %}

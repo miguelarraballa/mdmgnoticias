@@ -44,6 +44,15 @@
     </select>
     {% endif %}
 
+    {% if trending_tags %}
+    <select id="trending-select" class="cs cs--nav" aria-label="{% trans 'Tendencias' %}">
+      <option value="">{% trans "Tendencias" %}</option>
+      {% for tag in trending_tags %}
+      <option value="{% url 'article_list_tag' tag.slug %}" {% if active_tag.slug == tag.slug %}selected{% endif %}>#{{ tag.name }} ({{ tag.uses }})</option>
+      {% endfor %}
+    </select>
+    {% endif %}
+
     <div class="ms-auto d-flex align-items-center gap-2">
       <span id="refresh-status" class="text-white small" style="display:none!important"></span>
       <button id="refresh-btn" class="refresh-btn" title="{% trans 'Actualizar noticias' %}" data-url="{% url 'public_fetch' %}" data-csrf="{{ csrf_token }}">&#8635;</button>
@@ -106,6 +115,10 @@
 <script>
   const sel = document.getElementById('medio-select');
   if (sel) sel.addEventListener('change', () => location.href = sel.value);
+  const trending = document.getElementById('trending-select');
+  if (trending) trending.addEventListener('change', () => {
+    if (trending.value) location.href = trending.value;
+  });
 
   (function () {
     const btn = document.getElementById('refresh-btn');

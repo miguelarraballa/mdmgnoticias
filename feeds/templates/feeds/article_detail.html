@@ -43,6 +43,8 @@
   <div class="detail-body">{{ article.summary|striptags }}</div>
   {% endif %}
 
+  {% include "feeds/article_tags.html" %}
+
   <div class="tweet-actions mt-3 gap-3">
     <a href="{{ article.link }}" target="_blank" rel="noopener noreferrer" class="read-link">
       {% trans "Leer artículo original →" %}

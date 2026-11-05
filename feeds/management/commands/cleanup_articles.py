@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from feeds.models import Article, SiteConfig
+from feeds.models import Article, SiteConfig, Tag
 
 
 class Command(BaseCommand):
@@ -14,7 +14,9 @@ class Command(BaseCommand):
         config = SiteConfig.get()
         days = config.articles_retention_days
         cutoff = timezone.now() - timedelta(days=days)
-        deleted, _ = Article.objects.filter(published_at__lt=cutoff).delete()
+        deleted = Article.objects.filter(published_at__lt=cutoff).count()
+        Article.objects.filter(published_at__lt=cutoff).delete()
+        Tag.objects.filter(articles__isnull=True).delete()
         self.stdout.write(
             self.style.SUCCESS(f'Deleted {deleted} articles older than {days} days')
         )

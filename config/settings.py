@@ -97,6 +97,14 @@ LOGOUT_REDIRECT_URL = '/'
 
 ARTICLES_PER_PAGE = 20
 
+# AI tagging: any OpenAI-compatible chat completions endpoint. Empty key disables it.
+TAGGER_API_URL = config(
+    'TAGGER_API_URL',
+    default='https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
+)
+TAGGER_API_KEY = config('TAGGER_API_KEY', default='')
+TAGGER_MODEL = config('TAGGER_MODEL', default='')
+
 # HTTPS security (Apache handles SSL termination)
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SESSION_COOKIE_SECURE = True

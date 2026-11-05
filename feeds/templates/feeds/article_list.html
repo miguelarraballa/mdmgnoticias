@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% if active_category %}{{ active_category.name }} — {% endif %}MDMG Noticias{% endblock %}
+{% block title %}{% if active_tag %}#{{ active_tag.name }} — {% elif active_category %}{{ active_category.name }} — {% endif %}MDMG Noticias{% endblock %}
 
 {% block content %}
 <div id="new-articles-banner" class="new-articles-banner d-none" role="alert">
@@ -9,6 +9,8 @@
     <span id="new-articles-text">{% trans "Nuevos artículos" %}</span> ↑ {% trans "Pulsa para actualizar" %}
   </button>
 </div>
+
+{% if active_tag %}<h1 class="tag-heading">#{{ active_tag.name }}</h1>{% endif %}
 
 <div class="sort-bar">
   <select id="sort-select" class="cs cs--content">
@@ -21,6 +23,7 @@
      data-latest-id="{% if page_obj %}{{ page_obj.object_list.0.pk }}{% else %}0{% endif %}"
      data-category="{{ active_category.slug|default:'' }}"
      data-medio="{{ active_medio.slug|default:'' }}"
+     data-tag="{{ active_tag.slug|default:'' }}"
      data-sort="{{ sort }}">
   {% include "feeds/article_cards.html" %}
 
@@ -101,6 +104,7 @@
   let latestId   = parseInt(timeline.dataset.latestId || '0', 10);
   const category = timeline.dataset.category;
   const medio    = timeline.dataset.medio;
+  const tag      = timeline.dataset.tag;
   const banner   = document.getElementById('new-articles-banner');
   const bannerBtn= document.getElementById('new-articles-btn');
   const bannerTxt= document.getElementById('new-articles-text');
@@ -110,6 +114,7 @@
       let url = '/api/new-count/?after=' + latestId;
       if (category) url += '&category=' + encodeURIComponent(category);
       if (medio)    url += '&medio='    + encodeURIComponent(medio);
+      if (tag)      url += '&tag='      + encodeURIComponent(tag);
       const res  = await fetch(url);
       const data = await res.json();
       if (data.count > 0) {
