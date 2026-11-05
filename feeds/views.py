@@ -19,7 +19,7 @@ from django.views import View
 from django.views.generic import DetailView
 
 from .forms import CategoryForm, FeedForm, MedioForm, SiteConfigForm
-from .models import Article, Category, Feed, Medio, SiteConfig, UploadedOPML
+from .models import Article, Category, Feed, Medio, SiteConfig, Tag, UploadedOPML
 
 
 def _public_context():
@@ -34,10 +34,12 @@ def _public_context():
 # ---------------------------------------------------------------------------
 
 class ArticleListView(View):
-    def get(self, request, category_slug=None, medio_slug=None):
-        articles = Article.objects.select_related('feed', 'feed__category', 'feed__medio')
+    def get(self, request, category_slug=None, medio_slug=None, tag_slug=None):
+        articles = (Article.objects.select_related('feed', 'feed__category', 'feed__medio')
+                    .prefetch_related('tags'))
         active_category = None
         active_medio = None
+        active_tag = None
 
         if category_slug:
             active_category = get_object_or_404(Category, slug=category_slug)
@@ -46,6 +48,10 @@ class ArticleListView(View):
         if medio_slug:
             active_medio = get_object_or_404(Medio, slug=medio_slug)
             articles = articles.filter(feed__medio=active_medio)
+
+        if tag_slug:
+            active_tag = get_object_or_404(Tag, slug=tag_slug)
+            articles = articles.filter(tags=active_tag)
 
         sort = request.GET.get('sort', 'id')
         if sort == 'date':
@@ -66,6 +72,7 @@ class ArticleListView(View):
             'page_obj': page,
             'active_category': active_category,
             'active_medio': active_medio,
+            'active_tag': active_tag,
             'sort': sort,
             **_public_context(),
         })
@@ -509,12 +516,15 @@ class NewArticlesCountView(View):
             after_id = 0
         category_slug = request.GET.get('category', '')
         medio_slug = request.GET.get('medio', '')
+        tag_slug = request.GET.get('tag', '')
 
         articles = Article.objects.filter(pk__gt=after_id)
         if category_slug:
             articles = articles.filter(feed__category__slug=category_slug)
         if medio_slug:
             articles = articles.filter(feed__medio__slug=medio_slug)
+        if tag_slug:
+            articles = articles.filter(tags__slug=tag_slug)
 
         return JsonResponse({'count': articles.count()})
 

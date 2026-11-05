@@ -479,3 +479,6 @@ msgstr "just now"
 
 msgid "Error al eliminar"
 msgstr "Error deleting"
+
+msgid "Etiquetas"
+msgstr "Tags"

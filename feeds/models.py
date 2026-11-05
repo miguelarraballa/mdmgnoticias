@@ -102,6 +102,25 @@ class UploadedOPML(models.Model):
         return self.filename
 
 
+class Tag(models.Model):
+    name = models.CharField(max_length=80)
+    slug = models.SlugField(max_length=100, unique=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+    @classmethod
+    def for_name(cls, name):
+        """Return the tag for this name, unifying case and accent variants; None if unsluggable."""
+        slug = slugify(name)[:100].strip('-')
+        if not slug:
+            return None
+        return cls.objects.get_or_create(slug=slug, defaults={'name': name})[0]
+
+
 class Article(models.Model):
     feed = models.ForeignKey(Feed, on_delete=models.CASCADE, related_name='articles')
     title = models.CharField(max_length=500)
@@ -112,6 +131,8 @@ class Article(models.Model):
     image_url = models.URLField(max_length=1000, blank=True)
     media_url = models.URLField(max_length=1000, blank=True, default='')
     media_type = models.CharField(max_length=100, blank=True, default='')
+    tags = models.ManyToManyField(Tag, blank=True, related_name='articles')
+    tagged_at = models.DateTimeField(null=True, blank=True, db_index=True)
 
     class Meta:
         ordering = ['-published_at']
