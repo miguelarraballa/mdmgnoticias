@@ -105,6 +105,16 @@ class UploadedOPML(models.Model):
         return self.filename
 
 
+# Too broad to relate two news items. Never stored, whatever the model answers.
+GENERIC_TAG_SLUGS = frozenset(slugify(name) for name in (
+    'Actualidad', 'Consumo', 'Ciencia', 'Cultura', 'Deporte', 'Deportes', 'Derecho', 'Economía',
+    'Educación', 'Elecciones', 'Empresas', 'España', 'Historia', 'Internacional', 'Justicia',
+    'Medicina', 'Medio ambiente', 'Medios de comunicación', 'Nacional', 'Noticias', 'Periodismo',
+    'Política', 'Protestas', 'Radio Nacional de España', 'Salud', 'Seguridad', 'Sociedad',
+    'Tecnología', 'Televisión',
+))
+
+
 class Tag(models.Model):
     name = models.CharField(max_length=80)
     slug = models.SlugField(max_length=100, unique=True)
@@ -117,19 +127,21 @@ class Tag(models.Model):
 
     @classmethod
     def for_name(cls, name):
-        """Return the tag for this name, unifying case and accent variants; None if unsluggable."""
+        """Return the tag for this name, unifying case and accent variants; None if unusable."""
         slug = slugify(name)[:100].strip('-')
-        if not slug:
+        if not slug or slug in GENERIC_TAG_SLUGS:
             return None
         return cls.objects.get_or_create(slug=slug, defaults={'name': name})[0]
 
     @classmethod
     def trending(cls, limit=10, hours=48):
-        """Most used tags in recent articles. Future-dated articles don't count."""
+        """Tags most outlets are covering, so that one prolific feed can't dominate."""
         now = timezone.now()
         recent = Q(articles__published_at__range=(now - timedelta(hours=hours), now))
-        return (cls.objects.annotate(uses=Count('articles', filter=recent))
-                .filter(uses__gt=0).order_by('-uses', 'name')[:limit])
+        return (cls.objects
+                .annotate(outlets=Count('articles__feed__medio', filter=recent, distinct=True),
+                          uses=Count('articles', filter=recent))
+                .filter(outlets__gt=0).order_by('-outlets', '-uses', 'name')[:limit])
 
 
 class Article(models.Model):

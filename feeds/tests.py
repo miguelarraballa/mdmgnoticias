@@ -6,7 +6,7 @@ from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from . import tagging
-from .models import Article, Feed, Tag
+from .models import Article, Feed, Medio, Tag
 
 
 def api_response(entries, status=200):
@@ -108,16 +108,39 @@ class TaggingTests(TestCase):
         self.assertEqual(self.client.get('/t/nope/', secure=True).status_code, 404)
 
     def test_trending_counts_recent_articles_only(self):
+        self.feed.medio = Medio.objects.create(name='Medio')
+        self.feed.save()
         popular, rare, stale, future = (Tag.for_name(n) for n in ('Popular', 'Rara', 'Vieja', 'Futura'))
         for guid in ('a', 'b'):
             self.make_article(guid).tags.add(popular)
         self.make_article('c').tags.add(rare)
         self.make_article('old', age_days=5).tags.add(stale)
         self.make_article('next', age_days=-5).tags.add(future)
-        self.assertEqual([(t.name, t.uses) for t in Tag.trending()], [('Popular', 2), ('Rara', 1)])
+        self.assertEqual([(t.name, t.outlets, t.uses) for t in Tag.trending()],
+                         [('Popular', 1, 2), ('Rara', 1, 1)])
         self.assertEqual(len(Tag.trending(limit=1)), 1)
 
+    def test_trending_ranks_by_outlets_before_volume(self):
+        prolific, shared = Tag.for_name('Prolífico'), Tag.for_name('Compartido')
+        for guid in ('a', 'b', 'c'):
+            self.make_article(guid).tags.add(prolific)
+        for number in (1, 2):
+            medio = Medio.objects.create(name=f'Medio {number}')
+            feed = Feed.objects.create(name=str(number), url=f'https://m{number}.es/rss', medio=medio)
+            Article.objects.create(feed=feed, title='t', link='https://m.es/', guid=f'm{number}',
+                                   published_at=timezone.now()).tags.add(shared)
+        self.feed.medio = Medio.objects.create(name='Medio 3')
+        self.feed.save()
+        self.assertEqual([t.name for t in Tag.trending()], ['Compartido', 'Prolífico'])
+
+    def test_generic_tags_are_not_stored(self):
+        self.assertIsNone(Tag.for_name('Política'))
+        self.assertIsNone(Tag.for_name('politica'))
+        self.assertFalse(Tag.objects.exists())
+
     def test_trending_dropdown_rendered(self):
+        self.feed.medio = Medio.objects.create(name='Medio')
+        self.feed.save()
         self.make_article('a').tags.add(Tag.for_name('Gaza'))
         response = self.client.get('/', secure=True)
         self.assertContains(response, 'id="trending-select"')

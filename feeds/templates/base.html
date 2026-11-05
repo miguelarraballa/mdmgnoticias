@@ -48,7 +48,7 @@
     <select id="trending-select" class="cs cs--nav" aria-label="{% trans 'Tendencias' %}">
       <option value="">{% trans "Tendencias" %}</option>
       {% for tag in trending_tags %}
-      <option value="{% url 'article_list_tag' tag.slug %}" {% if active_tag.slug == tag.slug %}selected{% endif %}>#{{ tag.name }} ({{ tag.uses }})</option>
+      <option value="{% url 'article_list_tag' tag.slug %}" {% if active_tag.slug == tag.slug %}selected{% endif %}>#{{ tag.name }} ({{ tag.outlets }})</option>
       {% endfor %}
     </select>
     {% endif %}
