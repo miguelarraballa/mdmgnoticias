@@ -20,13 +20,16 @@ OVERLOAD_ATTEMPTS = 4      # 503 means the model is busy, which usually clears w
 OVERLOAD_WAIT_SECONDS = 20
 
 SYSTEM_PROMPT = """Eres un documentalista de un agregador de noticias. Asigna a cada artículo \
-entre 2 y {max_tags} etiquetas que permitan encontrar otras noticias sobre el mismo asunto.
+entre 1 y {max_tags} etiquetas que permitan encontrar otras noticias sobre el mismo asunto.
 
 Reglas:
 - Incluye siempre a cada persona, organización y acontecimiento concreto citado en el título, \
 aunque aparezca solo por el apellido o en siglas, con su nombre completo habitual \
 ("Ayuso" es "Isabel Díaz Ayuso"; "Hegseth" es "Pete Hegseth").
-- Añade el tema concreto de la noticia ("Educación", "Trata de personas", "Bolsa").
+- Añade el asunto concreto solo si es reconocible ("Huelga de maquinistas", "Trata de personas", \
+"Ibex 35"). Nunca uses áreas amplias como "Política", "Economía", "Salud", "Tecnología", \
+"Derecho" o "Cultura": mejor una sola etiqueta precisa que varias vagas.
+- No uses como etiqueta el nombre del medio que publica la noticia ni el de sus programas.
 - Un país, región o ciudad solo es etiqueta si la noticia trata de ese lugar en sí, no por \
 ser donde ocurre o de donde es el protagonista. Nunca uses "España" como etiqueta.
 - Evita secciones genéricas ("Nacional", "Actualidad", "Sociedad", "Noticias").
