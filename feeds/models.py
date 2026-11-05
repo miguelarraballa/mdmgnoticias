@@ -1,6 +1,9 @@
 import uuid as _uuid
+from datetime import timedelta
 
 from django.db import models
+from django.db.models import Count, Q
+from django.utils import timezone
 from django.utils.html import strip_tags
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
@@ -119,6 +122,14 @@ class Tag(models.Model):
         if not slug:
             return None
         return cls.objects.get_or_create(slug=slug, defaults={'name': name})[0]
+
+    @classmethod
+    def trending(cls, limit=10, hours=48):
+        """Most used tags in recent articles. Future-dated articles don't count."""
+        now = timezone.now()
+        recent = Q(articles__published_at__range=(now - timedelta(hours=hours), now))
+        return (cls.objects.annotate(uses=Count('articles', filter=recent))
+                .filter(uses__gt=0).order_by('-uses', 'name')[:limit])
 
 
 class Article(models.Model):

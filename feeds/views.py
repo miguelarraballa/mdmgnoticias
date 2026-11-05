@@ -26,6 +26,7 @@ def _public_context():
     return {
         'categories': Category.objects.all(),
         'medios': Medio.objects.all(),
+        'trending_tags': Tag.trending(),
     }
 
 

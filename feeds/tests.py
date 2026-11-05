@@ -63,6 +63,23 @@ class TaggingTests(TestCase):
         article.refresh_from_db()
         self.assertIsNone(article.tagged_at)
 
+    @mock.patch('feeds.tagging.time.sleep')
+    @mock.patch('feeds.tagging.requests.post')
+    def test_overloaded_model_is_retried(self, post, _sleep):
+        article = self.make_article('a')
+        post.side_effect = [api_response([], status=503), api_response([{'n': 1, 'tags': ['Gaza']}])]
+        self.assertEqual(tagging.tag_pending_articles(max_batches=1), 1)
+        self.assertEqual(article.tags.get().name, 'Gaza')
+
+    @mock.patch('feeds.tagging.time.sleep')
+    @mock.patch('feeds.tagging.requests.post')
+    def test_rate_limit_is_not_retried(self, post, _sleep):
+        self.make_article('a')
+        post.return_value = api_response([], status=429)
+        with self.assertRaises(tagging.TaggerError):
+            tagging.tag_pending_articles(max_batches=1)
+        self.assertEqual(post.call_count, 1)
+
     @mock.patch('feeds.tagging.requests.post')
     def test_malformed_answer_keeps_articles_pending(self, post):
         article = self.make_article('a')
@@ -89,6 +106,22 @@ class TaggingTests(TestCase):
         self.assertNotContains(response, '/a/%d/' % other.pk)
         self.assertContains(response, 'href="/t/gaza/"')
         self.assertEqual(self.client.get('/t/nope/', secure=True).status_code, 404)
+
+    def test_trending_counts_recent_articles_only(self):
+        popular, rare, stale, future = (Tag.for_name(n) for n in ('Popular', 'Rara', 'Vieja', 'Futura'))
+        for guid in ('a', 'b'):
+            self.make_article(guid).tags.add(popular)
+        self.make_article('c').tags.add(rare)
+        self.make_article('old', age_days=5).tags.add(stale)
+        self.make_article('next', age_days=-5).tags.add(future)
+        self.assertEqual([(t.name, t.uses) for t in Tag.trending()], [('Popular', 2), ('Rara', 1)])
+        self.assertEqual(len(Tag.trending(limit=1)), 1)
+
+    def test_trending_dropdown_rendered(self):
+        self.make_article('a').tags.add(Tag.for_name('Gaza'))
+        response = self.client.get('/', secure=True)
+        self.assertContains(response, 'id="trending-select"')
+        self.assertContains(response, '<option value="/t/gaza/" >#Gaza (1)</option>', html=True)
 
     def test_new_count_filters_by_tag(self):
         tagged, _other = self.make_article('tagged'), self.make_article('other')

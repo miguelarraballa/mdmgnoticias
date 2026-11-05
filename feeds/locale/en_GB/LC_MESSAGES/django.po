@@ -482,3 +482,6 @@ msgstr "Error deleting"
 
 msgid "Etiquetas"
 msgstr "Tags"
+
+msgid "Tendencias"
+msgstr "Trending"
